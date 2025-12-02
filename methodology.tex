@@ -1,30 +1,81 @@
 \section{Methodology}
 \label{sec:methodology}
 
-Traditional NLP models primarily relied on word-level tokenization, where each word was treated as an individual token. However, this approach was inadequate for handling out-of-vocabulary (OOV) words, requiring extensive vocabulary lists that resulted in inefficient memory usage \citep{radford_language_2019}. To address this, subword tokenization methods such as BPE and WordPiece emerged, segmenting rare words into smaller, frequently occurring subunits, thereby improving generalization and reducing OOV occurrences. BPE, originally introduced for data compression \citep{gage_new_1994} and later adapted for NLP by \citet{sennrich_neural_2016}, iteratively merges frequent adjacent character pairs into subword units. Similarly, WordPiece, which was initially developed for speech recognition \citep{schuster_japanese_2012}, follows a comparable iterative merging approach but optimizes token selection using likelihood-based probability maximization.
+Traditional subword tokenization methods like BPE \citep{sennrich_neural_2016} and WordPiece \citep{schuster_japanese_2012} often fail to capture the rich internal structure of agglutinative languages. For example, the Turkish word \textit{anlayabildiklerimizden} is composed of multiple morphemes (\textit{anla-yabil-dik-ler-imiz-den}). Standard tokenizers fragment such words arbitrarily, obscuring grammatical function. To address this, we propose a hybrid tokenization framework that prioritizes morphological segmentation while retaining BPE as a fallback for robustness.
 
-Morphological complexity presents a significant challenge for NLP tokenization, particularly in agglutinative languages such as Turkish, Hungarian, and Finnish. These languages exhibit a high degree of word inflection, resulting in a vast array of surface forms derived from relatively few lemmas \cite{martins_eurollm_2024}. In Turkish, for instance, the word \textit{anlayabildiklerimizden} (‘from what we were able to understand’) is composed of multiple morphemes: \textit{anla-} (\textsc{understand}) + \textit{-yabil} (\textsc{able}) + \textit{-dik} (\textsc{nominalizer}) + \textit{-ler} (\textsc{plural}) + \textit{-imiz} (\textsc{1pl.poss}) + \textit{-den} (\textsc{ablative}). Standard subword tokenization methods such as Byte Pair Encoding (BPE) and WordPiece often fail to capture such rich internal structures, fragmenting words in ways that obscure grammatical function and semantic interpretation \cite{kaya_effect_2024}. This misalignment reduces linguistic coherence and can negatively impact downstream tasks, highlighting the need for tokenizers that are sensitive to language-specific morphological and phonological features.
-
-\subsection{System Architecture}
-
-At the core of the system lies a hierarchical dataset used to separate words into their morphological components. The first file, \textbf{\texttt{kokler.json}}, hosts noun and verb roots in our language, as well as special control tokens critical for the model's operation such as \texttt{<uppercase>}, \texttt{<unknown>}, \texttt{<pad>}, and \texttt{<eos>}. The second file, \textbf{\texttt{ekler.json}}, hosts Turkish derivational and inflectional suffixes; the most distinguishing feature of this file is that suffixes with the same grammatical function but changing according to sound harmony (e.g., plural suffixes \textit{-lar} and \textit{-ler}) are grouped under a single ID. The third file, \textbf{\texttt{bpe\_tokenler.json}}, holds subword units created with the \textit{Byte-Pair Encoding} algorithm for rare word parts or foreign-origin structures that do not directly match in the root or suffix dictionaries.
-
-\subsection{Encoding (Tokenization) Process}
-
-The \textit{Encoding} phase, where text is converted into numerical data the model can understand, is based on the "Longest Prefix Match" algorithm. The process begins by splitting the raw text according to whitespace characters. At this stage, the positions of all uppercase letters are recorded so that uppercase information in the text is not lost, and compound spellings (CamelCase etc.) are separated into segments according to their internal structures.
-
-For each separated word part, the system scans with a specific priority order: First \textbf{roots}, then \textbf{suffixes}, and finally \textbf{BPE tokens} are checked. The longest matching part found is added to the token list; if no match is provided in any database, the \texttt{<unknown>} tag is assigned to the part. Additionally, the \texttt{<uppercase>} marker is added before segments starting with an uppercase letter in the original text to preserve case information. In the final step, all obtained token objects are converted to their corresponding numerical IDs in the JSON files.
-
-\subsection{Decoding (Text Construction and Sound Events)}
-
-The section of the system with the most complexity and linguistic intelligence is the \textit{Decoding} phase. This process works on the "Single ID, Multiple Views" principle; that is, the model produces functional IDs, not the surface forms of words. The Decoder, while converting these IDs to text, dynamically resolves Turkish sound events by looking both forward (lookahead) and backward (lookbehind).
-
-\textbf{In the analysis of roots}, the system looks forward, i.e., to the token coming after it. The list of roots is ordered from the form of the word most susceptible to change to the least. For example, the root "sıcak" (hot) hosts \texttt{["sıcak", "sıcağ", "sıca"]} variations under a single ID (100). If a suffix starting with a vowel follows this ID (e.g., "-ı"), the system selects the softened form "sıcağ" to form the word "sıcağı". Similarly, if the suffix "-yor" follows the verb "ağla" (cry), the vowel narrowing rule is applied, the "ağlı" form is selected, and the output "ağlıyor" is produced.
-
-\textbf{In the analysis of suffixes}, the system decides by looking backward, i.e., to the token preceding it. Suffixes are shaped according to vowel harmony and consonant hardening rules:
-
+\subsection{Dictionary Construction}
+The foundation of our hybrid tokenizer is a curated set of morphological dictionaries derived from open-source linguistic resources, primarily the Zemberek NLP framework \cite{akin_turk_2007} and the Turkish Language Association (TDK) data.
 \begin{enumerate}
-    \item \textbf{Vowel Harmony:} In suffixes with two variations like the plural suffix, if the last vowel of the previous word is front, "-ler" (meyveler) is selected; if back, "-lar" is selected. In suffixes with four variations (possessive, accusative, derivational suffixes, etc.), the appropriate one from the sounds "ı, i, u, ü" is determined based on whether the previous vowel is unrounded/rounded and front/back. For example, the privative suffix coming after the word "akıl" enters the "ı" harmony and takes the form "akılsız".
-    \item \textbf{Consonant Hardening:} Locative (-da/-de), ablative, or copula suffixes harden if the previous word ends with one of the "FıSTıKÇı ŞaHaP" consonants. For example, the ablative suffix coming after the word "ekmek" becomes "-ten" (ekmekten) instead of "-den"; the copula suffix coming after the word "saat" takes the form "saattir".
-    \item \textbf{Complex Situations:} Structures like the future tense (-acak/-ecek), the denominal noun-making "-lık" or the diminutive suffix "-cık" look at both the previous token (for vowel/consonant harmony) and the next token (for whether softening will occur) simultaneously. For example, while the "-lik" suffix coming to the word "kalem" normally becomes "kalemlik", when a vowel suffix comes after it, it softens and transforms into the "kalemliği" form; the "-cik" suffix coming to the word "kedi" remains as "kedicik".
+    \item \textbf{Root Dictionary (\texttt{kokler.json}):} We extracted approximately 22,000 high-frequency Turkish roots (nouns and verbs) from a large-scale corpus of Turkish web text. These roots were filtered to exclude rare or archaic terms that would unnecessarily inflate the vocabulary. Special control tokens (\texttt{<uppercase>}, \texttt{<unknown>}, \texttt{<pad>}, \texttt{<eos>}) were added to support model training.
+    \item \textbf{Suffix Dictionary (\texttt{ekler.json}):} This dictionary contains 230 distinct derivational and inflectional suffixes. Crucially, we applied phonological abstraction: suffixes that are phonetically distinct but functionally identical (allomorphs) are mapped to a single canonical ID. For example, the plural suffix forms \textit{-lar} and \textit{-ler} share the same token ID, as do the four variants of the accusative case (\textit{-ı, -i, -u, -ü}).
+    \item \textbf{BPE Vocabulary (\texttt{bpe\_tokenler.json}):} To ensure full coverage for foreign words, proper names, and rare scientific terms, we trained a Byte Pair Encoding (BPE) model on the same corpus with a vocabulary limit of 10,000 subwords. This serves as a fallback mechanism for any segment not found in the root or suffix dictionaries.
 \end{enumerate}
+
+\subsection{Encoding Process}
+The encoding phase converts raw text into a sequence of token IDs using a "Longest Prefix Match" algorithm with a strict priority hierarchy: \textbf{Roots $\gg$ Suffixes $\gg$ BPE}. This design ensures that linguistically valid morphemes are always preferred over statistical subwords.
+
+\subsubsection{Handling Special Cases}
+\begin{itemize}
+    \item \textbf{Case Sensitivity:} Unlike standard lowercasing, we preserve case information using a special \texttt{<uppercase>} token. This token is inserted immediately before any token that was originally capitalized. This approach allows the model to distinguish between proper nouns (e.g., \textit{Ayşe}) and common nouns (e.g., \textit{ayşe}) without duplicating every word in the vocabulary.
+    \item \textbf{Acronyms and CamelCase:} Words with mixed casing or all-uppercase acronyms (e.g., \textit{TBMM}, \textit{iPhone}) are first split into segments based on case transitions. Each segment is then tokenized individually. For example, \textit{HTTPServer} is split into \textit{HTTP} and \textit{Server}, which are then processed by the BPE fallback if they are not in the root dictionary.
+    \item \textbf{Compound Words:} Lexicalized compounds (e.g., \textit{hanımeli}, \textit{bilgisayar}) are treated as single roots if they appear in the root dictionary. Novel or transparent compounds are naturally segmented into their constituent roots and suffixes by the longest-prefix match algorithm.
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\begin{small}
+\begin{verbatim}
+Algorithm: Hybrid Encoding
+Input: text string T
+Output: list of token IDs
+
+1. Split T into words by whitespace.
+2. For each word W:
+    a. Identify uppercase positions.
+    b. Split W into segments (handle camelCase).
+    c. For each segment S:
+        i.   Check ROOTS for longest prefix match.
+             If match: add ID, continue.
+        ii.  Check SUFFIXES for longest prefix match.
+             If match: add ID, continue.
+        iii. Check BPE for longest prefix match.
+             If match: add ID, continue.
+        iv.  Else: add <unknown> ID.
+    d. Insert <uppercase> tokens based on (a).
+3. Return list of IDs.
+\end{verbatim}
+\end{small}
+\caption{Pseudocode for the hybrid encoding process.}
+\label{fig:algo}
+\end{figure}
+
+\subsection{Decoding and Phonological Resolution}
+
+The \textbf{Decoding} phase reconstructs text from token IDs using a "Single ID, Multiple Views" principle. Since multiple surface forms (allomorphs) map to a single ID, the decoder must dynamically resolve the correct form based on context. This process is critical for generating natural-sounding Turkish text.
+
+\subsubsection{Root Resolution (Lookahead)}
+Roots susceptible to alternation are stored with their canonical form but can be modified based on the following suffix.
+\begin{itemize}
+    \item \textbf{Vowel Softening:} Roots ending in \textit{k, p, ç, t} may soften to \textit{ğ, b, c, d} when followed by a vowel. For example, the root \textit{kitap} (book) is tokenized as a single ID. If the next token is the accusative suffix \textit{-ı}, the decoder outputs \textit{kitabı} instead of \textit{kitapı}.
+    \item \textbf{Vowel Dropping:} Some roots lose a vowel when a suffix is added. For instance, \textit{akıl} (mind) + \textit{-ı} becomes \textit{aklı}. The decoder checks the root type and the incoming suffix to apply this transformation.
+\end{itemize}
+
+\subsubsection{Suffix Resolution (Lookbehind)}
+Suffixes are stored as abstract templates (e.g., \textit{-lAr} for plural) and are instantiated based on the phonological properties of the preceding token.
+\begin{itemize}
+    \item \textbf{2-Way Vowel Harmony (A-Type):} Suffixes containing \textit{a/e} (e.g., plural \textit{-lar/-ler}) select the vowel based on the last vowel of the previous token.
+    \begin{itemize}
+        \item Back vowels (\textit{a, ı, o, u}) $\rightarrow$ \textit{-lar} (e.g., \textit{arabalar})
+        \item Front vowels (\textit{e, i, ö, ü}) $\rightarrow$ \textit{-ler} (e.g., \textit{evler})
+    \end{itemize}
+    \item \textbf{4-Way Vowel Harmony (I-Type):} Suffixes containing high vowels (e.g., accusative \textit{-ı/-i/-u/-ü}) select from four variants based on roundness and backness.
+    \begin{itemize}
+        \item \textit{a, ı} $\rightarrow$ \textit{-ı} (e.g., \textit{kapı-yı})
+        \item \textit{e, i} $\rightarrow$ \textit{-i} (e.g., \textit{kedi-yi})
+        \item \textit{o, u} $\rightarrow$ \textit{-u} (e.g., \textit{okul-u})
+        \item \textit{ö, ü} $\rightarrow$ \textit{-ü} (e.g., \textit{gül-ü})
+    \end{itemize}
+    \item \textbf{Consonant Hardening:} Suffixes starting with \textit{c, d, g} (e.g., locative \textit{-da}) harden to \textit{ç, t, k} if the previous token ends in a voiceless consonant (F, S, T, K, Ç, Ş, H, P). For example, \textit{sokak} + \textit{-da} $\rightarrow$ \textit{sokakta}.
+\end{itemize}
+
+This dynamic resolution allows the vocabulary to remain compact while generating linguistically correct surface forms, effectively decoupling the model's internal representation from the surface complexity of the language.
