@@ -1,6 +1,9 @@
 \documentclass{article}
 
-\usepackage[final, nonatbib]{neurips_2024}
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\PassOptionsToPackage{table,xcdraw}{xcolor}
+\usepackage{acl}
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
@@ -11,11 +14,8 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 
-\usepackage[table,xcdraw]{xcolor} % Add this package for row coloring
-
 \usepackage{url}
 \def\UrlBreaks{\do\/\do-}
-\usepackage{breakurl}
 \usepackage[breaklinks]{hyperref}
 
 \usepackage{amsmath}
@@ -58,7 +58,6 @@ $^4$Istanbul Bilgi University \\
 % \input{future_work}
 \input{conclusion}
 
-\bibliographystyle{unsrt}
 \bibliography{tokenizer}
 
 \end{document}
