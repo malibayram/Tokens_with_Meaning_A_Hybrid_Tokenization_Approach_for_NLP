@@ -1,0 +1,64 @@
+\documentclass{article}
+
+\usepackage[final, nonatbib]{neurips_2024}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+%\usepackage{hyperref}       % hyperlinks
+%\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+\usepackage[table,xcdraw]{xcolor} % Add this package for row coloring
+
+\usepackage{url}
+\def\UrlBreaks{\do\/\do-}
+\usepackage{breakurl}
+\usepackage[breaklinks]{hyperref}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{threeparttable}
+\usepackage{wrapfig}
+\usepackage[normalem]{ulem} 
+\useunder{\uline}{\ul}{}
+\usepackage{placeins}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows.meta, positioning}
+
+\tikzset{
+    % Using simpler styles to match the input flowchart's appearance
+    process/.style = {rectangle, minimum width=3cm, minimum height=1cm, text centered, draw, text width=3.5cm, align=center, fill=orange!30}, % Adjusted text width
+    decision/.style = {diamond, aspect=1.5, minimum width=3cm, minimum height=1cm, text centered, draw, text width=3cm, align=center,  fill=green!30}, % Adjusted text width and aspect ratio
+    arrow/.style = {thick,->,>=Stealth}
+}
+
+% \usepackage{showframe} to debug float placements visually:
+
+\title{Tokens with Meaning: A Hybrid Tokenization Approach for NLP}
+
+\author{
+M. Ali Bayram$^1$, Ali Arda Fincan$^2$, Ahmet Semih Gümüş$^2$, Sercan Karakaş$^3$, \\
+Banu Diri$^1$, Savaş Yıldırım$^4$, Demircan Çelik$^2$\\
+$^1$Yıldız Technical University, $^2$Yeditepe University, $^3$University of Chicago, \\
+$^4$Istanbul Bilgi University \\
+\texttt{malibayram20@gmail.com}
+}
+
+\begin{document}
+\maketitle
+
+\input{abstract}
+\input{introduction}
+\input{related_work}
+\input{methodology}
+\input{results_and_analysis}
+% \input{future_work}
+\input{conclusion}
+
+\bibliographystyle{unsrt}
+\bibliography{tokenizer}
+
+\end{document}

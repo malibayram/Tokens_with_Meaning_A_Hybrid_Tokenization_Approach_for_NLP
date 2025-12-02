@@ -1,0 +1,151 @@
+\section{Methodology}
+\label{sec:methodology}
+
+Traditional NLP models primarily relied on word-level tokenization, where each word was treated as an individual token. However, this approach was inadequate for handling out-of-vocabulary (OOV) words, requiring extensive vocabulary lists that resulted in inefficient memory usage \cite{radford_language_2019}. To address this, subword tokenization methods such as BPE and WordPiece emerged, segmenting rare words into smaller, frequently occurring subunits, thereby improving generalization and reducing OOV occurrences. BPE, originally introduced for data compression \cite{gage_new_1994} and later adapted for NLP by \cite{sennrich_neural_2016}, iteratively merges frequent adjacent character pairs into subword units. Similarly, WordPiece, which was initially developed for speech recognition \cite{schuster_japanese_2012}, follows a comparable iterative merging approach but optimizes token selection using likelihood-based probability maximization.
+
+Morphological complexity presents a significant challenge for NLP tokenization, particularly in agglutinative languages such as Turkish, Hungarian, and Finnish. These languages exhibit a high degree of word inflection, resulting in a vast array of surface forms derived from relatively few lemmas \cite{martins_eurollm_2024}. In Turkish, for instance, the word \textit{anlayabildiklerimizden} (‘from what we were able to understand’) is composed of multiple morphemes: \textit{anla-} (\textsc{understand}) + \textit{-yabil} (\textsc{able}) + \textit{-dik} (\textsc{nominalizer}) + \textit{-ler} (\textsc{plural}) + \textit{-imiz} (\textsc{1pl.poss}) + \textit{-den} (\textsc{ablative}). Standard subword tokenization methods such as Byte Pair Encoding (BPE) and WordPiece often fail to capture such rich internal structures, fragmenting words in ways that obscure grammatical function and semantic interpretation \cite{kaya_effect_2024}. This misalignment reduces linguistic coherence and can negatively impact downstream tasks, highlighting the need for tokenizers that are sensitive to language-specific morphological and phonological features.
+
+The hybrid tokenization framework combines linguistic knowledge with statistical subword segmentation techniques to enhance tokenization performance in morphologically rich languages, using Turkish as a benchmark. The approach integrates rule-based morphological analysis with a structured dictionary of roots and affixes while incorporating Byte Pair Encoding (BPE) to handle out-of-vocabulary (OOV) words and ambiguous segments. The objective is to create a tokenization system that accurately represents linguistic structures while maintaining computational efficiency.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{0.88\textheight}{% Reduced height from full to 88%
+\begin{tikzpicture}[node distance=1.3cm and 1.2cm, every node/.style={transform shape, scale=0.85}]
+
+\tikzstyle{process} = [rectangle, minimum width=2.8cm, text width=2.8cm, minimum height=1.2cm, text centered, draw=black, fill=blue!10]
+\tikzstyle{decision} = [diamond, aspect=2, text width=3cm, text centered, draw=black, fill=yellow!20]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+% Nodes
+\node[process] (input_node) {Input};
+\node[decision, below=of input_node] (special_check) {Is there any special tokens?};
+\node[process, below left=1.3cm and 0.5cm of special_check] (add_special) {Add special token to token list};
+\node[process, below right=1.3cm and 0.5cm of special_check] (process_word) {Process word segment};
+\node[decision, below=1.3cm of process_word] (root_check) {Is the word in root list?};
+\node[process, below left=1.3cm and 0.5cm of root_check] (add_root_id) {Add ID of root to token list};
+\node[process, below right=1.3cm and 0.5cm of root_check] (iterate_root) {Iterate through word to find longest matched root};
+\node[decision, below=1.3cm of iterate_root] (root_found_check) {Is the root found?};
+\node[process, below left=1.3cm and 0.3cm of root_found_check] (check_suffixes) {Check suffixes};
+\node[process, below right=2.5cm and 0.8cm of root_found_check] (try_bpe) {Try BPE segmentation};
+\node[decision, below=1.3cm of check_suffixes] (suffixes_found_check) {Are suffixes found?};
+\node[process, below left=1.3cm and 0.3cm of suffixes_found_check] (add_root_suffix_ids) {Add IDs of root and suffixes to token list};
+\node[decision, below right=1.3cm and 0.3cm of suffixes_found_check] (remainder_root_check) {Is remainder a root?};
+\node[process, below left=1.3cm and 0.3cm of remainder_root_check] (add_root_id_rem) {Add ID of root to token list};
+
+% Arrows
+\draw[arrow] (input_node) -- (special_check);
+\draw[arrow] (special_check) -- node[above left, pos=0.4] {Yes} (add_special);
+\draw[arrow] (special_check) -- node[above right, pos=0.4] {No} (process_word);
+\draw[arrow] (process_word) -- (root_check);
+\draw[arrow] (root_check) -- node[above left, pos=0.4] {Yes} (add_root_id);
+\draw[arrow] (root_check) -- node[above right, pos=0.4] {No} (iterate_root);
+\draw[arrow] (iterate_root) -- (root_found_check);
+\draw[arrow] (root_found_check) -- node[above left, pos=0.4] {Yes} (check_suffixes);
+\draw[arrow] (root_found_check.east) -| node[above, pos=0.3] {No} (try_bpe.north);
+\draw[arrow] (check_suffixes) -- (suffixes_found_check);
+\draw[arrow] (suffixes_found_check) -- node[above left, pos=0.4] {Yes} (add_root_suffix_ids);
+\draw[arrow] (suffixes_found_check) -- node[above right, pos=0.4] {No} (remainder_root_check);
+\draw[arrow] (remainder_root_check) -- node[above left, pos=0.4] {Yes} (add_root_id_rem);
+\draw[arrow] (remainder_root_check) -- node[above right, pos=0.4] {No} (try_bpe);
+
+\end{tikzpicture}%
+}
+\caption{Tokenization decision flow with root, suffix, and fallback segmentation logic.}
+\end{figure}
+
+The tokenizer is implemented in both Python and Rust, each optimized for different use cases. The Python implementation provides flexibility and ease of integration into NLP pipelines, whereas the Rust implementation prioritizes performance through parallel processing and efficient memory management. The tokenization process follows a structured pipeline consisting of three key components: dictionary-based morphological segmentation, BPE integration for subword tokenization, and the inclusion of special tokens to preserve linguistic and formatting information.
+
+Morphological segmentation is a key component of the proposed approach, leveraging a dual-dictionary system to accurately identify and segment words. The root dictionary is constructed from high-frequency words extracted from large-scale Turkish corpora, ensuring that only base word forms are included. This dictionary is augmented with phonological normalization techniques to prevent vocabulary expansion due to phonological alternations such as final devoicing (\textit{kitap} $\rightarrow$ \textit{kitabı}), haplology (\textit{alın} $\rightarrow$ \textit{alnı}), and vowel hiatus (\textit{oyna} + \textit{yor} $\rightarrow$ \textit{oynuyor}). Furthermore, frequently used compound words such as "akarsu" and "çamaşırhane" are assigned unique identifiers to ensure they are treated as single tokens rather than being arbitrarily segmented.
+
+The affix dictionary consists of approximately 230 linguistic elements, including suffixes, prepositions, and conjunctions. To improve efficiency and reduce redundancy, affixes with identical grammatical functions, such as the plural markers "-lAr" or the ablative markers "-dAn," are assigned a common identifier. This approach ensures that morphologically equivalent structures do not inflate the vocabulary size while preserving their grammatical roles in sentence construction.
+
+To ensure comprehensive token coverage, the framework integrates Byte Pair Encoding (BPE) to segment words that are not explicitly listed in the morphological dictionaries. The training data for BPE was sourced from large-scale Turkish corpora, specifically \textit{umarigan/turkish\_corpus\_small} and \textit{kadirnar/combined-turkish-datasets-v4}, with a combined size of 8.52 GB. Using the SentencePiece library, a vocabulary of 10,000 subword units was generated and subsequently incorporated into the tokenizer. This enables the system to process novel words while retaining consistency in morphological decomposition.
+
+Special tokens are introduced to handle whitespace, punctuation, capitalization, and unknown words, enhancing the tokenizer's ability to preserve linguistic structure. A dedicated token for whitespace ensures that spacing information is explicitly encoded, preserving sentence structure during tokenization. Additionally, an uppercase token is introduced to differentiate capitalized words from their lowercase counterparts without inflating the vocabulary. Additional tokens account for newline characters, tab spaces, and unknown words, preventing tokenization errors when encountering unfamiliar input.
+
+The encoding process begins with morphological analysis, where the longest matching root is identified from the dictionary. Once the root is determined, suffix segmentation is performed by iteratively checking for affix matches. If a valid segmentation cannot be identified using the morphological dictionary, the remaining portion of the word is processed using BPE-based subword segmentation. Words that do not match any predefined root, suffix, or subword are assigned an unknown token, ensuring robustness in handling OOV terms.
+
+The decoding process reconstructs tokenized text while adhering to linguistic rules. A reverse mapping mechanism ensures that phonological alternations are restored correctly, preserving morphosyntactic dependencies. Disambiguation rules are applied to select the most probable reconstruction based on phonetic context and grammatical constraints. This process enhances readability while maintaining fidelity to the original text.
+
+The proposed framework provides a balance between linguistic integrity and computational efficiency. By integrating morphological analysis with BPE-based segmentation, the tokenizer achieves improved performance in capturing linguistic structures while maintaining flexibility for unseen words. Furthermore, the methodology is adaptable to other morphologically complex languages, demonstrating its potential for multilingual applications.
+
+The construction of the tokenizer dictionary follows a structured approach that ensures comprehensive coverage of Turkish morphology while maintaining efficiency. The dictionary consists of three primary components: a root word list, an affix list, and a set of functional words such as prepositions and conjunctions. These elements form the basis of the tokenization process, enabling accurate segmentation and linguistic representation.
+
+The root dictionary is built from a dataset of high-frequency Turkish words extracted from large-scale corpora. This dataset includes approximately 22,000 roots, ensuring broad lexical coverage. Each root is assigned a unique identifier, allowing for consistent referencing throughout the tokenization process. To improve efficiency, roots are categorized based on their length, enabling a hierarchical lookup mechanism that prioritizes longer roots before shorter alternatives. This method significantly enhances root detection speed by reducing the number of comparisons required.
+
+An additional layer of processing is applied to handle phonological alternations in root words, which frequently occur in Turkish due to sound changes triggered by suffixation. To ensure consistency and reduce vocabulary sparsity, different phonetic realizations of the same morphological root are mapped to a single identifier. For example, final devoicing results in surface variations such as \textit{kitap} (‘book’) and \textit{kitabı} (‘its book’), both of which are assigned the same root ID. Similarly, haplology in forms like \textit{alın} (‘forehead’) and \textit{alnı} (‘his/her forehead’), and vowel hiatus in forms like \textit{oyna} + \textit{yor} $\rightarrow$ \textit{oynuyor} (‘he/she/it is playing’) are normalized through unified token mappings. This phonological normalization preserves morphological coherence while avoiding unnecessary token duplication.
+
+In addition to root words, the dictionary includes a comprehensive inventory of approximately 230 suffixes, prepositions, and conjunctions, compiled from authoritative linguistic sources and organized according to grammatical function. To further optimize vocabulary size without compromising syntactic accuracy, affixes that perform the same grammatical role are assigned a shared identifier. For instance, plural suffixes such as \textit{-lAr}, or ablative markers like \textit{-dAn}, \textit{-tAn}, functionally represent the same morphemes but differ based on phonological context. This strategy is also applied to locative markers like \textit{-dA} and \textit{-tA}, which exhibit surface variation due to consonant alternation rules. By merging such phonologically conditioned allomorphs, the tokenizer reduces redundancy while maintaining linguistic fidelity.
+
+Compound words represent another important aspect of Turkish morphology, wherein multiple roots combine to form a single semantic unit. To prevent incorrect segmentation, frequently used compounds such as \textit{akarsu} (‘stream’) and \textit{çamaşırhane} (‘laundromat’) are directly included in the dictionary and assigned unique token IDs. This ensures that compound expressions are treated as indivisible lexical items, preserving their semantic integrity and avoiding erroneous decomposition into root-affix pairs.
+
+Beyond roots and affixes, the dictionary incorporates functional words such as prepositions and conjunctions, which play a crucial role in sentence structure. These elements are often challenging to tokenize correctly due to their small size and high frequency. By including them explicitly in the dictionary, the tokenizer avoids erroneous segmentations that might result from statistical subword approaches.
+
+The integration of Byte Pair Encoding (BPE) further enhances tokenization flexibility. While the dictionary provides structured linguistic segmentation, BPE ensures robust handling of words not explicitly covered in the predefined lexicon. The BPE model is trained on a diverse Turkish corpus, incorporating approximately 10,000 subword units to supplement dictionary-based tokenization. The combined approach enables the tokenizer to efficiently process both frequent and rare words, ensuring comprehensive text coverage.
+
+Another important aspect of the proposed framework is its ability to handle case sensitivity without increasing vocabulary size. A dedicated uppercase token is introduced to mark words that were originally capitalized. This avoids the need to store separate tokens for capitalized and lowercase versions of the same word, optimizing storage efficiency while preserving orthographic distinctions.
+
+The dictionary-driven approach provides a balance between linguistic accuracy and computational efficiency. By leveraging structured linguistic resources, normalizing phonological variations, and integrating statistical subword segmentation, the tokenizer achieves robust performance across diverse text types. The next section will describe the encoding and decoding processes in detail, outlining how tokenization is applied in practice to segment and reconstruct text.
+
+The encoding process follows a hierarchical approach that ensures linguistic consistency while maintaining computational efficiency. The tokenizer operates in a multi-step pipeline that sequentially applies morphological analysis, affix segmentation, and subword processing. This structured approach optimizes tokenization accuracy while preserving essential linguistic features.
+
+The encoding process begins with preprocessing, where special characters and formatting elements are replaced with predefined tokens. Whitespace characters such as spaces, newlines, and tab spaces are explicitly encoded using dedicated tokens. This step ensures that text formatting is preserved, preventing information loss in structured text. Additionally, words that begin with capital letters are marked with an uppercase token to maintain case information without inflating the vocabulary.
+
+Following preprocessing, the tokenizer applies root detection using a hierarchical lookup strategy. The algorithm first searches for the longest matching root in the dictionary, prioritizing exact matches before considering phonological variants. If a match is found, the root is assigned its corresponding token ID. In cases where no direct match is identified, alternative scenarios such as compound words or phonologically altered roots are considered. This flexible approach ensures that words are correctly segmented even when phonological modifications are present.
+
+Once the root is identified, suffix segmentation is performed iteratively. The algorithm checks for affix matches in the suffix dictionary and assigns token IDs accordingly. Each identified suffix is treated as a separate token, maintaining its grammatical function while ensuring proper segmentation. The suffix matching process continues until no further valid suffixes can be extracted. If an affix is ambiguous or overlaps with multiple possible segmentations, a probabilistic model selects the most likely segmentation based on corpus frequency data.
+
+If a word does not match any predefined root or suffix, Byte Pair Encoding (BPE) is applied as a fallback mechanism. The BPE model segments the word into subword units based on a pre-trained vocabulary, ensuring that unknown words are processed effectively. This hybrid approach prevents the tokenizer from failing on unseen words while maintaining the linguistic integrity of known structures.
+
+For example, the word \textit{kalktığımızda} (‘when we stood up’) is segmented into its root and affix components as follows:
+
+\textbf{Input text:} \texttt{"Kalktığımızda hep birlikte yürüdük."} (“When we stood up, we walked together.”)
+
+\textbf{Token sequence:} \texttt{[uppercase], kalk, tığ, ımız, da, [space], hep, [space], birlikte, [space], yürü, dü, k, .}
+
+\textbf{Token IDs:} \texttt{0, 1502, 22280, 22285, 22278, 1, 2300, 1, 4803, 1, 2280, 22296, 22617, 22582}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=1.5cm and 0.7cm, every node/.style={transform shape, scale=0.95}]
+\tikzset{
+  mystep/.style={
+    rectangle, rounded corners, draw=black, fill=blue!10,
+    minimum height=1.1cm, minimum width=2.8cm,
+    text centered, align=center
+  },
+  arrow/.style={->, thick, >=stealth}
+}
+
+\node[mystep] (text) {Input Text \\ \texttt{"Kalktığımızda hep birlikte yürüdük."}};
+\node[mystep, below=of text] (tokenized) {Tokenized \\ \texttt{[uppercase], kalk, tığ, ımız, da, [space], hep, [space], birlikte, [space], yürü, dü, k, .}};
+\node[mystep, below=of tokenized] (ids) {Token IDs \\ \texttt{0, 1502, 22280, 22285, 22278, 1, 2300, 1, 4803, 1, 2280, 22296, 22617, 22582}};
+\node[mystep, below=1.7cm of ids] (reconstruct) {Decoded Tokens};
+\node[mystep, below=of reconstruct] (finaltext) {Output Text \\ \texttt{"Kalktığımızda hep birlikte yürüdük."}};
+
+\draw[arrow] (text) -- (tokenized) node[midway, right] {Encoding};
+\draw[arrow] (tokenized) -- (ids);
+\draw[arrow] (ids) -- (reconstruct) node[midway, right] {Decoding};
+\draw[arrow] (reconstruct) -- (finaltext);
+
+\end{tikzpicture}%
+}
+\caption{Encoding and decoding process for the sentence “Kalktığımızda hep birlikte yürüdük.”}
+\end{figure}
+
+This example demonstrates how the encoder accurately identifies the root \textit{kalk} (“stand up”), segments its suffixes (\textit{-tığ} “past nominalizer”, \textit{-ımız} “our”, \textit{-da} “when/at”), and preserves syntactic structure using dedicated space and punctuation tokens. Each token corresponds to a morphologically meaningful unit, enabling interpretable and reversible text representations.
+
+The decoding process reconstructs surface text from tokenized sequences while maintaining linguistic accuracy. Token IDs are mapped back to their textual forms, and affixes are recombined according to their grammatical function. During this step, phonological alternations are reversed: rules for soft consonantization, vowel deletion, and contraction are reapplied to ensure natural word formation.
+
+Capitalization is restored using a dedicated \texttt{[uppercase]} token, which automatically capitalizes the first letter of the following word. Space and punctuation tokens (\texttt{[space]}, \texttt{.}, etc.) are replaced with their respective characters, maintaining sentence layout. If an unknown or out-of-vocabulary token is encountered, a placeholder is inserted to allow for post-processing or human review.
+
+Consider another example:
+
+\textbf{Token sequence:} \texttt{[uppercase], kitap, [space], okuma, yı, [space], sev, i, yor, um, .}
+
+\textbf{Decoded output:} \texttt{"Kitap okumayı seviyorum."} (“I like reading books.”)
+
+This process demonstrates how the tokenizer ensures both accuracy and efficiency in text reconstruction, preserving morphological structure while maintaining fluency.
+
+The proposed framework successfully integrates morphological analysis with subword segmentation, creating a robust tokenizer optimized for morphologically complex languages. By balancing linguistic integrity and computational efficiency, this approach offers a scalable solution adaptable to multiple languages. Future work may explore extending this framework to other agglutinative languages, optimizing it for real-time applications, and integrating additional linguistic features for enhanced performance.

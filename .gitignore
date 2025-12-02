@@ -1,0 +1,14 @@
+# latex related files
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.log
+*.out
+*.syn
+*.toc
+*.vrb
+*.zip
+*.fls
+*.synctex.gz
+*.fdb_latexmk
