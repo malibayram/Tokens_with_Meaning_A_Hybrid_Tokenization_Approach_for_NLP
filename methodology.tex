@@ -15,52 +15,6 @@ The \textit{Encoding} phase, where text is converted into numerical data the mod
 
 For each separated word part, the system scans with a specific priority order: First \textbf{roots}, then \textbf{suffixes}, and finally \textbf{BPE tokens} are checked. The longest matching part found is added to the token list; if no match is provided in any database, the \texttt{<unknown>} tag is assigned to the part. Additionally, the \texttt{<uppercase>} marker is added before segments starting with an uppercase letter in the original text to preserve case information. In the final step, all obtained token objects are converted to their corresponding numerical IDs in the JSON files.
 
-\begin{figure}[htbp]
-\centering
-\resizebox{\textwidth}{0.88\textheight}{% Reduced height from full to 88%
-\begin{tikzpicture}[node distance=1.3cm and 1.2cm, every node/.style={transform shape, scale=0.85}]
-
-\tikzstyle{process} = [rectangle, minimum width=2.8cm, text width=2.8cm, minimum height=1.2cm, text centered, draw=black, fill=blue!10]
-\tikzstyle{decision} = [diamond, aspect=2, text width=3cm, text centered, draw=black, fill=yellow!20]
-\tikzstyle{arrow} = [thick,->,>=stealth]
-
-% Nodes
-\node[process] (input_node) {Input};
-\node[decision, below=of input_node] (special_check) {Is there any special tokens?};
-\node[process, below left=1.3cm and 0.5cm of special_check] (add_special) {Add special token to token list};
-\node[process, below right=1.3cm and 0.5cm of special_check] (process_word) {Process word segment};
-\node[decision, below=1.3cm of process_word] (root_check) {Is the word in root list?};
-\node[process, below left=1.3cm and 0.5cm of root_check] (add_root_id) {Add ID of root to token list};
-\node[process, below right=1.3cm and 0.5cm of root_check] (iterate_root) {Iterate through word to find longest matched root};
-\node[decision, below=1.3cm of iterate_root] (root_found_check) {Is the root found?};
-\node[process, below left=1.3cm and 0.3cm of root_found_check] (check_suffixes) {Check suffixes};
-\node[process, below right=2.5cm and 0.8cm of root_found_check] (try_bpe) {Try BPE segmentation};
-\node[decision, below=1.3cm of check_suffixes] (suffixes_found_check) {Are suffixes found?};
-\node[process, below left=1.3cm and 0.3cm of suffixes_found_check] (add_root_suffix_ids) {Add IDs of root and suffixes to token list};
-\node[decision, below right=1.3cm and 0.3cm of suffixes_found_check] (remainder_root_check) {Is remainder a root?};
-\node[process, below left=1.3cm and 0.3cm of remainder_root_check] (add_root_id_rem) {Add ID of root to token list};
-
-% Arrows
-\draw[arrow] (input_node) -- (special_check);
-\draw[arrow] (special_check) -- node[above left, pos=0.4] {Yes} (add_special);
-\draw[arrow] (special_check) -- node[above right, pos=0.4] {No} (process_word);
-\draw[arrow] (process_word) -- (root_check);
-\draw[arrow] (root_check) -- node[above left, pos=0.4] {Yes} (add_root_id);
-\draw[arrow] (root_check) -- node[above right, pos=0.4] {No} (iterate_root);
-\draw[arrow] (iterate_root) -- (root_found_check);
-\draw[arrow] (root_found_check) -- node[above left, pos=0.4] {Yes} (check_suffixes);
-\draw[arrow] (root_found_check.east) -| node[above, pos=0.3] {No} (try_bpe.north);
-\draw[arrow] (check_suffixes) -- (suffixes_found_check);
-\draw[arrow] (suffixes_found_check) -- node[above left, pos=0.4] {Yes} (add_root_suffix_ids);
-\draw[arrow] (suffixes_found_check) -- node[above right, pos=0.4] {No} (remainder_root_check);
-\draw[arrow] (remainder_root_check) -- node[above left, pos=0.4] {Yes} (add_root_id_rem);
-\draw[arrow] (remainder_root_check) -- node[above right, pos=0.4] {No} (try_bpe);
-
-\end{tikzpicture}%
-}
-\caption{Tokenization decision flow with root, suffix, and fallback segmentation logic.}
-\end{figure}
-
 \subsection{Decoding (Text Construction and Sound Events)}
 
 The section of the system with the most complexity and linguistic intelligence is the \textit{Decoding} phase. This process works on the "Single ID, Multiple Views" principle; that is, the model produces functional IDs, not the surface forms of words. The Decoder, while converting these IDs to text, dynamically resolves Turkish sound events by looking both forward (lookahead) and backward (lookbehind).
@@ -74,32 +28,3 @@ The section of the system with the most complexity and linguistic intelligence i
     \item \textbf{Consonant Hardening:} Locative (-da/-de), ablative, or copula suffixes harden if the previous word ends with one of the "FıSTıKÇı ŞaHaP" consonants. For example, the ablative suffix coming after the word "ekmek" becomes "-ten" (ekmekten) instead of "-den"; the copula suffix coming after the word "saat" takes the form "saattir".
     \item \textbf{Complex Situations:} Structures like the future tense (-acak/-ecek), the denominal noun-making "-lık" or the diminutive suffix "-cık" look at both the previous token (for vowel/consonant harmony) and the next token (for whether softening will occur) simultaneously. For example, while the "-lik" suffix coming to the word "kalem" normally becomes "kalemlik", when a vowel suffix comes after it, it softens and transforms into the "kalemliği" form; the "-cik" suffix coming to the word "kedi" remains as "kedicik".
 \end{enumerate}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[node distance=1.5cm and 0.7cm, every node/.style={transform shape, scale=0.95}]
-\tikzset{
-  mystep/.style={
-    rectangle, rounded corners, draw=black, fill=blue!10,
-    minimum height=1.1cm, minimum width=2.8cm,
-    text centered, align=center
-  },
-  arrow/.style={->, thick, >=stealth}
-}
-
-\node[mystep] (text) {Input Text \\ \texttt{"Kalktığımızda hep birlikte yürüdük."}};
-\node[mystep, below=of text] (tokenized) {Tokenized \\ \texttt{[uppercase], kalk, tığ, ımız, da, [space], hep, [space], birlikte, [space], yürü, dü, k, .}};
-\node[mystep, below=of tokenized] (ids) {Token IDs \\ \texttt{0, 1502, 22280, 22285, 22278, 1, 2300, 1, 4803, 1, 2280, 22296, 22617, 22582}};
-\node[mystep, below=1.7cm of ids] (reconstruct) {Decoded Tokens};
-\node[mystep, below=of reconstruct] (finaltext) {Output Text \\ \texttt{"Kalktığımızda hep birlikte yürüdük."}};
-
-\draw[arrow] (text) -- (tokenized) node[midway, right] {Encoding};
-\draw[arrow] (tokenized) -- (ids);
-\draw[arrow] (ids) -- (reconstruct) node[midway, right] {Decoding};
-\draw[arrow] (reconstruct) -- (finaltext);
-
-\end{tikzpicture}%
-}
-\caption{Encoding and decoding process for the sentence “Kalktığımızda hep birlikte yürüdük.”}
-\end{figure}
