@@ -13,39 +13,14 @@ We evaluated the proposed tokenizer on the TR-MMLU benchmark \cite{bayram_settin
 \rowcolor[HTML]{DDDDDD} 
 \textbf{Tokenizer} & \textbf{Vocab} & \textbf{Tokens} & \textbf{Unique} & \textbf{TR \%} & \textbf{Pure \%} \\ \hline
 \texttt{turkish\_tokenizer} (Ours) & 32k & 707k & 11.1k & \textbf{90.29} & \textbf{85.80} \\ \hline
-\texttt{google/gemma-2-9b} & 256k & - & - & 40.96 & 28.49 \\ \hline
-\texttt{meta-llama/Llama-3.2-3B} & 128k & - & - & 45.77 & 31.45 \\ \hline
-\texttt{Qwen/Qwen2.5-7B-Instruct} & 152k & - & - & 40.39 & - \\ \hline
-\texttt{CohereForAI/aya-expanse-8b} & 256k & 434k & - & 53.48 & - \\ \hline
+\texttt{google/gemma-2-9b} & 256k & 497k & 6.3k & 40.96 & 28.49 \\ \hline
+\texttt{meta-llama/Llama-3.1} & 128k & 488k & 6.8k & 45.77 & 31.45 \\ \hline
+\texttt{Qwen/Qwen2.5-7B-Instruct} & 152k & 561k & 5.7k & 40.39 & 30.15 \\ \hline
+\texttt{CohereForAI/aya-expanse-8b} & 256k & 434k & 8.5k & 53.48 & 32.96 \\ \hline
 \end{tabular}%
 }
 \end{table}
 
-As shown in Table \ref{tab:turkish_tokenizer_results}, our tokenizer achieves the highest linguistic alignment (90.29\% TR~\%, 85.80\% Pure~\%) despite having a significantly smaller vocabulary (32k vs. 256k). While the total token count is higher (707k vs. 434k for Aya), this reflects a granular segmentation that respects morpheme boundaries rather than arbitrary subword merges.
+As shown in Table \ref{tab:turkish_tokenizer_results}, our tokenizer achieves the highest linguistic alignment (90.29\% TR~\%, 85.80\% Pure~\%) while being $8\times$ smaller than Gemma's 256k tokenizer. This size efficiency is crucial, as it significantly reduces the embedding layer parameters, thereby minimizing the model's memory footprint.This linguistic precision leads to an anticipated trade-off: an increased sequence length, with our tokenizer generating 63\% more tokens \texttt{aya-expanse} (707k vs. 434k). While a higher token count means longer sequences and a higher computational cost for attention mechanisms, it provides a crucial benefit for agglutinative languages. It furnishes the model with a more explicit and regular representation of the language, allowing it to learn the compositional rules of the grammar rather than being forced to memorize millions of distinct surface forms (e.g., \textit{geldim, geldin, geldi...}) as individual vocabulary items.
 
-\subsection{Qualitative Analysis}
-To illustrate the difference in segmentation strategies, we analyzed two sentences with varying morphological complexity.
-
-\textbf{Example 1:} \textit{"Atasözleri geçmişten günümüze kadar ulaşan anlamı bakımından mecazlı bir mana kazanan kalıplaşmış sözlerdir."}
-\begin{itemize}
-    \item \textbf{Proposed Tokenizer:} Correctly identifies roots (\textit{atasöz, gün, mana}) and separates suffixes (\textit{-ler, -i, -ten, -üm, -üz, -e}). It preserves the internal structure of complex words like \textit{kalıplaşmış} (\textit{kalıp-laş-mış}).
-    \item \textbf{Baselines:} Frequently fragment roots (e.g., \textit{At-as-öz} instead of \textit{atasöz}) or merge distinct morphemes into opaque subwords (e.g., \textit{bakımından} as a single token). This over-segmentation of roots and under-segmentation of affixes hinders the model's ability to generalize across morphologically related forms.
-\end{itemize}
-
-\textbf{Example 2:} \textit{"Çekoslovakyalılaştıramadıklarımızdan mısınız?"} (Are you one of those whom we could not make resemble a Czechoslovakian?)
-\begin{itemize}
-    \item \textbf{Proposed Tokenizer:} \texttt{["Çekoslovakya", "lı", "laş", "tır", "ama", "dık", "lar", "ımız", "dan", " ", "mı", "sınız", "?"]} \\
-    The tokenizer successfully decomposes this famous agglutinative tongue-twister into its constituent morphemes. The root \textit{Çekoslovakya} is identified, followed by the derivational suffixes \textit{-lı} (from), \textit{-laş} (become), \textit{-tır} (causative), and the negation \textit{-ama}.
-    \item \textbf{Gemma-2:} \texttt{["Çek", "os", "lo", "vak", "yalı", "laş", "tı", "ra", "ma", "dık", "la", "rı", "mız", "dan", ...]} \\
-    The baseline fails to recognize the proper noun root and fragments the suffixes into arbitrary syllables (\textit{os, lo, vak}), destroying the semantic compositionality of the word.
-\end{itemize}
-
-\subsection{Token Fertility and Efficiency}
-A key trade-off in tokenization is between vocabulary size and sequence length (fertility). As shown in Table \ref{tab:turkish_tokenizer_results}, our tokenizer generates approximately 63\% more tokens than \texttt{aya-expanse} (707k vs. 434k). This increased fertility is an expected consequence of granular morphological segmentation.
-
-\begin{itemize}
-    \item \textbf{Vocabulary Efficiency:} Our tokenizer uses a compact vocabulary of 32k, which is $8\times$ smaller than Gemma's 256k. This significantly reduces the embedding layer parameters, potentially lowering the model's memory footprint.
-    \item \textbf{Sequence Length:} The higher token count implies longer input sequences for the same text. While this increases the computational cost of attention mechanisms (which scale quadratically with length), it provides the model with a more explicit and regular representation of the language. For agglutinative languages, this trade-off is often beneficial, as the model does not need to memorize millions of surface forms (e.g., \textit{geldim, geldin, geldi...}) as distinct vocabulary items, but can instead learn the compositional rules of the grammar.
-\end{itemize}
-
-These results confirm that frequency-based tokenizers, even with large vocabularies, struggle with the agglutinative structure of Turkish. Our hybrid approach, by contrast, yields tokens that are linguistically meaningful and consistent.
+These results confirm that frequency-based tokenizers, even with large vocabularies, struggle with the agglutinative structure of Turkish. Our hybrid approach, by contrast, yields tokens that are linguistically meaningful and consistent, a success that underscores its value for managing this characteristic complexity. By ensuring our tokens are linguistically meaningful and respect morpheme boundaries , we not only achieve higher alignment metrics but also provide the model with a superior, more regular representation of the language. This allows the model to efficiently learn the compositional nature of Turkish grammar, demonstrating that prioritizing morphological integrity can be more effective for complex linguistic structures than simply relying on large, frequency-driven vocabularies.
