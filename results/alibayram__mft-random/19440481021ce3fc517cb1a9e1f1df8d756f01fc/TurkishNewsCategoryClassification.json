@@ -1,0 +1,73 @@
+{
+  "dataset_revision": "main",
+  "task_name": "TurkishNewsCategoryClassification",
+  "mteb_version": "1.31.3",
+  "scores": {
+    "test": [
+      {
+        "accuracy": 0.8528,
+        "f1": 0.852802,
+        "f1_weighted": 0.852802,
+        "scores_per_experiment": [
+          {
+            "accuracy": 0.852,
+            "f1": 0.851497,
+            "f1_weighted": 0.851497
+          },
+          {
+            "accuracy": 0.848,
+            "f1": 0.84715,
+            "f1_weighted": 0.84715
+          },
+          {
+            "accuracy": 0.848,
+            "f1": 0.847974,
+            "f1_weighted": 0.847974
+          },
+          {
+            "accuracy": 0.832,
+            "f1": 0.832463,
+            "f1_weighted": 0.832463
+          },
+          {
+            "accuracy": 0.86,
+            "f1": 0.860445,
+            "f1_weighted": 0.860445
+          },
+          {
+            "accuracy": 0.848,
+            "f1": 0.847337,
+            "f1_weighted": 0.847337
+          },
+          {
+            "accuracy": 0.856,
+            "f1": 0.856478,
+            "f1_weighted": 0.856478
+          },
+          {
+            "accuracy": 0.864,
+            "f1": 0.864186,
+            "f1_weighted": 0.864186
+          },
+          {
+            "accuracy": 0.86,
+            "f1": 0.859877,
+            "f1_weighted": 0.859877
+          },
+          {
+            "accuracy": 0.86,
+            "f1": 0.860612,
+            "f1_weighted": 0.860612
+          }
+        ],
+        "main_score": 0.8528,
+        "hf_subset": "default",
+        "languages": [
+          "tur-Latn"
+        ]
+      }
+    ]
+  },
+  "evaluation_time": 74.06219530105591,
+  "kg_co2_emissions": null
+}

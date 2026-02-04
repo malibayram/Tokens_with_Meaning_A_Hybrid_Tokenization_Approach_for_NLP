@@ -1,0 +1,73 @@
+{
+  "dataset_revision": "main",
+  "task_name": "TSTimelineNewsCategoryClassification",
+  "mteb_version": "1.31.3",
+  "scores": {
+    "test": [
+      {
+        "accuracy": 0.44348,
+        "f1": 0.412032,
+        "f1_weighted": 0.412032,
+        "scores_per_experiment": [
+          {
+            "accuracy": 0.460784,
+            "f1": 0.443857,
+            "f1_weighted": 0.443857
+          },
+          {
+            "accuracy": 0.45098,
+            "f1": 0.416104,
+            "f1_weighted": 0.416104
+          },
+          {
+            "accuracy": 0.411275,
+            "f1": 0.369688,
+            "f1_weighted": 0.369688
+          },
+          {
+            "accuracy": 0.445098,
+            "f1": 0.402143,
+            "f1_weighted": 0.402143
+          },
+          {
+            "accuracy": 0.443137,
+            "f1": 0.416908,
+            "f1_weighted": 0.416908
+          },
+          {
+            "accuracy": 0.444608,
+            "f1": 0.39743,
+            "f1_weighted": 0.39743
+          },
+          {
+            "accuracy": 0.427451,
+            "f1": 0.391374,
+            "f1_weighted": 0.391374
+          },
+          {
+            "accuracy": 0.454412,
+            "f1": 0.43549,
+            "f1_weighted": 0.43549
+          },
+          {
+            "accuracy": 0.442647,
+            "f1": 0.426455,
+            "f1_weighted": 0.426455
+          },
+          {
+            "accuracy": 0.454412,
+            "f1": 0.420874,
+            "f1_weighted": 0.420874
+          }
+        ],
+        "main_score": 0.44348,
+        "hf_subset": "default",
+        "languages": [
+          "tur-Latn"
+        ]
+      }
+    ]
+  },
+  "evaluation_time": 24.285831928253174,
+  "kg_co2_emissions": null
+}

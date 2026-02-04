@@ -1,0 +1,15 @@
+.env
+__pycache__/
+.DS_Store
+
+# latex related files
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.synctex.gz(busy)
+*.fdb_latexmk
+*.fls
+*.toc

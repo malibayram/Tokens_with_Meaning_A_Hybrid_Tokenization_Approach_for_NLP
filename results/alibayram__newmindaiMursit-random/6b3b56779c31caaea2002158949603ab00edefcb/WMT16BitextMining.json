@@ -1,0 +1,22 @@
+{
+  "dataset_revision": "main",
+  "task_name": "WMT16BitextMining",
+  "mteb_version": "1.31.3",
+  "scores": {
+    "test": [
+      {
+        "precision": 0.014245,
+        "recall": 0.028,
+        "f1": 0.016278,
+        "accuracy": 0.028,
+        "main_score": 0.016278,
+        "hf_subset": "default",
+        "languages": [
+          "tur-Latn"
+        ]
+      }
+    ]
+  },
+  "evaluation_time": 29.716376066207886,
+  "kg_co2_emissions": null
+}
