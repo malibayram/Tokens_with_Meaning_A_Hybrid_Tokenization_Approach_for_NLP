@@ -1,0 +1,5 @@
+{
+  "pad_token": "<pad>",
+  "eos_token": "<eos>",
+  "unk_token": "<unknown>"
+}

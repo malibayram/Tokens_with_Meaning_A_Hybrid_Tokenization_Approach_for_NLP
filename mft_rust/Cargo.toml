@@ -1,0 +1,23 @@
+[package]
+name = "turkish_tokenizer"
+version = "1.0.4"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "turkish_tokenizer"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.23.3", features = ["extension-module"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+indexmap = { version = "2.2", features = ["serde"] }
+ahash = "0.8"
+smallvec = "1.13"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+panic = "abort"

@@ -1,0 +1,7 @@
+{
+  "tokenizer_class": "TurkishMFTTokenizerHF",
+  "auto_map": {
+    "AutoTokenizer": ["tokenization_turkish_mft.TurkishMFTTokenizerHF", null]
+  },
+  "model_max_length": 1000000000
+}

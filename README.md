@@ -25,6 +25,7 @@ pip install -r requirements.txt
 ```
 
 Notes:
+
 - Some scripts fetch datasets/models from Hugging Face at runtime and may require credentials (see `.env` usage in `train.py`).
 - `setup_server.sh` is an Ubuntu/Debian convenience script (uses `apt`) for remote machines.
 
@@ -44,7 +45,14 @@ Details on how the repo’s evaluation artifacts are produced are in `new_evalua
   python3 generate_sts_artifacts.py
   ```
 
-### MTEB (reporting from stored results)
+### MTEB benchmark (MTEB-TR)
+
+- Evaluate one:
+
+  ```bash
+  git clone https://github.com/selmanbaysan/mteb_tr.git
+  python3 mteb_tr/mteb_tr_cli.py alibayram/mft-random
+  ```
 
 - MTEB raw outputs live under `results/<model>/<revision>/*.json`.
 - Generate the markdown report:
@@ -55,11 +63,12 @@ Details on how the repo’s evaluation artifacts are produced are in `new_evalua
 
 ### TurBLiMP (centroid proxy for embedding models)
 
-The TurBLiMP scripts expect a local data folder (not included by default):
+The TurBLiMP scripts expect a local TurBLiMP/data folder:
 
-- Expected layout: `data/experimental/*.csv` with `(good_sentence, bad_sentence)` pairs.
+- Expected layout: `TurBLiMP/data/experimental/*.csv` with `(good_sentence, bad_sentence)` pairs.
 - Run evaluation:
   ```bash
+  git clone https://github.com/ezgibasar/TurBLiMP.git
   python3 eval_embeddings_turblimp.py --models alibayram/mft-random
   ```
 - Convert the styled HTML table to colored LaTeX:
@@ -69,7 +78,9 @@ The TurBLiMP scripts expect a local data folder (not included by default):
 
 ### Long-text roundtrip check
 
-`evaluate_long_text.py` imports `turkish_tokenizer.TurkishTokenizer`, which is not implemented in this repository. If you have that tokenizer available (e.g., as a local module or installed package), the script writes `LONG_TEXT_EVAL_REPORT_RUST.md`.
+`pipi install turkish_tokenizer` to get the required tokenizer for this script. Then:
+
+`evaluate_long_text.py` If you have that tokenizer available (e.g., as a local module or installed package), the script writes `LONG_TEXT_EVAL_REPORT_RUST.md`.
 
 ## Repository layout
 

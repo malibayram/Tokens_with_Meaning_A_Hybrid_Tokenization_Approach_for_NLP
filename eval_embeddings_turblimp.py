@@ -41,7 +41,9 @@ def load_pairs(filepath: Path, delimiter: str = ";") -> list[tuple[str, str]]:
     return pairs
 
 
-def encode(model: SentenceTransformer, sentences: list[str], batch_size: int) -> np.ndarray:
+def encode(
+    model: SentenceTransformer, sentences: list[str], batch_size: int
+) -> np.ndarray:
     return model.encode(
         sentences,
         batch_size=batch_size,
@@ -51,7 +53,9 @@ def encode(model: SentenceTransformer, sentences: list[str], batch_size: int) ->
     )
 
 
-def score_centroid(E_good: np.ndarray, E_bad: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def score_centroid(
+    E_good: np.ndarray, E_bad: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     centroid = E_good.mean(axis=0)
     centroid = centroid / (np.linalg.norm(centroid) + 1e-12)
     good_scores = E_good @ centroid
@@ -95,11 +99,13 @@ def evaluate_file(
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Evaluate embedding models on TurBLiMP (centroid proxy).")
+    ap = argparse.ArgumentParser(
+        description="Evaluate embedding models on TurBLiMP (centroid proxy)."
+    )
     ap.add_argument(
         "--data_dir",
-        default="data",
-        help="TurBLiMP data directory containing experimental/*.csv (default: data)",
+        default="TurBLiMP/data",
+        help="TurBLiMP data directory containing experimental/*.csv (default: TurBLiMP/data)",
     )
     ap.add_argument(
         "--experimental_subdir",
@@ -114,7 +120,9 @@ def main() -> None:
     )
     ap.add_argument("--delimiter", default=";", help="CSV delimiter (default: ';').")
     ap.add_argument("--batch_size", type=int, default=64)
-    ap.add_argument("--device", default=None, help="Device for SentenceTransformer (default: auto).")
+    ap.add_argument(
+        "--device", default=None, help="Device for SentenceTransformer (default: auto)."
+    )
     ap.add_argument(
         "--output_dir",
         default="turblimp_results_tables",
@@ -142,8 +150,12 @@ def main() -> None:
     table = pd.DataFrame(index=rows)
 
     for model_name in args.models:
-        model = SentenceTransformer(model_name, device=args.device, trust_remote_code=True)
-        col = model_name.split("/")[-1].replace("-random", "").replace("-random-init", "")
+        model = SentenceTransformer(
+            model_name, device=args.device, trust_remote_code=True
+        )
+        col = (
+            model_name.split("/")[-1].replace("-random", "").replace("-random-init", "")
+        )
 
         scores = []
         for fp in csv_files:
@@ -159,7 +171,9 @@ def main() -> None:
                 safe_model = model_name.replace("/", "__")
                 det_dir = out_dir / "pairwise_details" / safe_model
                 det_dir.mkdir(parents=True, exist_ok=True)
-                details.to_csv(det_dir / f"{fp.stem}.csv", index=False, encoding="utf-8")
+                details.to_csv(
+                    det_dir / f"{fp.stem}.csv", index=False, encoding="utf-8"
+                )
 
         table[col] = scores
 
@@ -190,4 +204,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
