@@ -1,7 +1,7 @@
 \section{Methodology}
 \label{sec:methodology}
 
-We propose a hybrid tokenization framework that combines linguistic knowledge with statistical subword segmentation. This approach, TurkishTokenizer, integrates rule-based morphological analysis with a structured dictionary of roots and affixes while incorporating BPE to handle out-of-vocabulary (OOV) terms. The objective is to create a tokenization system that accurate represents linguistic structures while maintaining computational efficiency.
+We propose a hybrid tokenization framework that combines linguistic knowledge with statistical subword segmentation. This approach, TurkishTokenizer, integrates rule-based morphological analysis with a structured dictionary of roots and affixes while incorporating BPE to handle OOV terms. The objective is to create a tokenization system that accurately represents linguistic structures while maintaining computational efficiency.
 
 \begin{figure}[H]
 \centering
@@ -29,7 +29,7 @@ We propose a hybrid tokenization framework that combines linguistic knowledge wi
 \node[process, below=of special] (prep) {If capitalized: emit \texttt{<uppercase>}\\Lowercase word; normalize variants};
 
 \node[decision, below=of prep] (root) {Root+suffix\\analysis succeeds?};
-\node[process, left=of root] (emit_morph) {Emit root ID\\+ suffix IDs};
+\node[process, left=of root] (emit_morph) {Emit root\\+ suffix identifiers};
 \node[process, right=of root] (emit_bpe) {BPE fallback\\(else \texttt{<unk>})};
 
 \node[startstop, below=10mm of root] (end) {Next / End};
@@ -56,11 +56,11 @@ We provide a Python reference implementation of the tokenizer and release the le
 
 \textbf{Dictionary Construction.} The core of TurkishTokenizer is a dual-dictionary system designed to cover the productive morphology of Turkish.
 
-\textbf{Root Dictionary.} The root dictionary is constructed from high-frequency words extracted from large-scale Turkish corpora, resulting in 22,231 root tokens, which are normalized and mapped to approximately 22,000 unique canonical root IDs in order to handle phonological alternations. For example, consonant alternation causes \textit{kitap} (book) and \textit{kitab-ı} (book-POSS) to share the same root ID despite the $p \to b$ lenition; vowel hiatus maps \textit{oyna} (play) and \textit{oynuyor} (playing, where `a' drops) to a unified token; and haplology treats \textit{alın} (forehead) and \textit{alnı} (his forehead) identically. We also explicitly tokenize frequent compound words (e.g., \textit{akarsu} `stream', \textit{çamaşırhane} `laundromat') as single units to prevent erroneous splitting.
+\textbf{Root Dictionary.} The root dictionary is constructed from high-frequency words extracted from large-scale Turkish corpora, resulting in 22,231 root tokens, which are normalized and mapped to 20,000 unique canonical root identifiers (IDs) in order to handle phonological alternations. For example, consonant alternation causes \textit{kitap} (book) and \textit{kitab-ı} (book-POSS) to share the same root ID despite the $p \to b$ lenition; vowel hiatus maps \textit{oyna} (play) and \textit{oynuyor} (playing, where `a' drops) to a unified token; and haplology treats \textit{alın} (forehead) and \textit{alnı} (his forehead) identically. We also explicitly tokenize frequent compound words (e.g., \textit{akarsu} `stream', \textit{çamaşırhane} `laundromat') as single units to prevent erroneous splitting.
 
 \textbf{Affix Dictionary.} The affix inventory consists of 177 suffix surface forms consolidated into 72 abstract affix IDs (covering grammatical morphemes such as case markers, tense suffixes, and derivational endings). Similar to roots, we merge allomorphs that serve identical grammatical functions into shared IDs. For instance, the plural suffix \textit{-ler} and its harmonic variant \textit{-lar} are assigned a single token ID (e.g., \textsc{PL}), as are the ablative variants \textit{-den, -dan, -ten, -tan}. This abstraction reduces vocabulary redundancy while preserving the morphosyntactic signal.
 
-\textbf{Input Normalization and Special Tokens.} To ensure robustness across diverse text inputs, we implement strict normalization rules. For case handling, we introduce an \texttt{<uppercase>} token to mark capitalized words, allowing the model to process \textit{Kitap} and \textit{kitap} using the same root embedding and effectively halving the number of required surface forms. For CamelCase splitting, technical terms and code-switching often introduce CamelCase (e.g., `HTTPServer), which we split into constituent parts (`HTTP, `Server) before tokenization to improve subword coverage. Word boundaries are marked by including a leading space in root tokens, ensuring that tokenization is lossless and reversible without a dedicated whitespace token.
+\textbf{Input Normalization and Special Tokens.} To ensure robustness across diverse text inputs, we implement strict normalization rules. For case handling, we introduce an \texttt{<uppercase>} token to mark capitalized words, allowing the model to process \textit{Kitap} and \textit{kitap} using the same root embedding and effectively halving the number of required surface forms. Word boundaries are marked by including a leading space in root tokens, ensuring that tokenization is lossless and reversible without a dedicated whitespace token.
 
 \textbf{Encoding Algorithm.} The encoding process (Algorithm \ref{alg:encoding}) follows a ``longest-prefix match'' strategy. For each word, the tokenizer first attempts to identify a valid root from the dictionary. If a root is found, it greedily matches the longest chain of valid suffixes.
 
@@ -70,7 +70,7 @@ We provide a Python reference implementation of the tokenizer and release the le
 \begin{algorithmic}[1]
 \State \textbf{Input:} Raw text string $S$
 \State \textbf{Output:} Sequence of Token IDs $T$
-\State $S \gets \text{Preprocess}(S)$ \Comment{Insert spaces, split CamelCase}
+\State $S \gets \text{Preprocess}(S)$ \Comment{Insert spaces}
 \For{each word $w$ in $S$}
     \If{$w$ is Space or Punctuation}
         \State $T.\text{append}(\text{GetSpecialID}(w))$
@@ -96,13 +96,6 @@ We provide a Python reference implementation of the tokenizer and release the le
 \end{algorithm}
 
 If the morphological analyzer fails to cover the word (i.e., no valid root+suffix combination is found), the system falls back to a BPE model. This ensures that the tokenizer remains open-vocabulary and can handle foreign entities or neologisms. The BPE model is trained on a version of the corpus where known morphological segments are masked, focusing its vocabulary (12,696 tokens) on residual stems and subwords.
-
-\textbf{Example 1} Consider the validation sentence:
-
-\glossex{\texttt{<upper>} atasöz-ler-i \_ geçmiş-ten \_ günü-m-üz-e \_ kadar \_ ulaş-an \_ anlam-ı \_ bakım-ın-dan \_ mecaz-lı \_ bir \_ mana \_ kazan-an \_ kalıp-laş-mış \_ sözle-r-dir.}
-{CAPS proverb-PL-POSS.3SG \_ past-ABL \_ day-POSS.1PL-DAT \_ until \_ reach-ADJ.PTCP \_ meaning-POSS.3SG \_ aspect-POSS.3SG-ABL \_ metaphor-WITH \_ a \_ meaning \_ gain-ADJ.PTCP \_ mold-become-PERF.PTCP \_ word-PL-COP .}
-{Proverbs are stereotyped expressions that have reached the present day from the past and have gained a metaphorical meaning in terms of their significance.}
-{Atasözleri geçmişten günümüze kadar ulaşan anlamı bakımından mecazlı bir mana kazanan kalıplaşmış sözlerdir.}
 
 \textbf{Decoding Algorithm.} Decoding in TurkishTokenizer is non-trivial compared to standard subword tokenizers. Simple concatenation is insufficient due to the normalization of affixes. The decoder (Algorithm~\ref{alg:decoding}) applies phonological rules to reconstruct the correct surface form by selecting the appropriate allomorphic variant for each suffix based on context.
 
@@ -137,20 +130,20 @@ The \texttt{ApplyPhonology} function implements five Turkish morphophonological 
 \begin{enumerate}
     \item \textbf{Vowel harmony (front/back):} Suffix vowels match the frontness of the last vowel (e.g., \textit{-ler} after \textit{ev} but \textit{-lar} after \textit{çocuk}; front vowels: e,i,ö,ü; back vowels: a,ı,o,u)
     \item \textbf{Consonant assimilation:} Initial $d \to t$ after voiceless consonants (e.g., \textit{-da} $\to$ \textit{-ta} after \textit{kitap}; voiceless: f,s,t,k,ç,ş,h,p)
-    \item \textbf{Consonant softening:} Final $p \to b$, $k \to ğ$, $t \to d$, $ç \to c$ before vowel-initial suffixes (e.g., \textit{kitap} $\to$ \textit{kitab-ı})
+    \item \textbf{Lenition:} Final $p \to b$, $k \to ğ$, $t \to d$, $ç \to c$ before vowel-initial suffixes (e.g., \textit{kitap} $\to$ \textit{kitab-ı})
     \item \textbf{Vowel narrowing:} Stem-final $e \to i$, $a \to ı$ before progressive \textit{-yor} (e.g., \textit{de-} $\to$ \textit{di-yor}, \textit{başla-} $\to$ \textit{başlı-yor})
     \item \textbf{Buffer consonant insertion:} $y$/$n$/$s$ inserted between vowels (e.g., \textit{okuma} + ACC $\to$ \textit{okuma-y-ı})
 \end{enumerate}
 
-\textbf{Roundtrip Reconstruction Evaluation.} To validate the reconstruction property of the decoder, we evaluate word-level roundtrip accuracy on 66,547 words from the Cosmos corpus. Given an input word $w$, we compute $\hat{w} = \text{decode}(\text{encode}(w))$ and measure exact-match accuracy. The decoder achieves \textbf{99.48\% exact-match accuracy} (66,200/66,547 words). The remaining 0.52\% failures arise from inherent ambiguity in Turkish phonology: vowel alternation patterns in complex verb forms (e.g., \textit{tetkiki} $\to$ \textit{tetkiği}) where multiple surface realizations are linguistically valid for the same morpheme sequence. This is not a limitation of the tokenizer but rather reflects the intrinsic many-to-one mapping in Turkish morphophonology, where the same abstract morpheme can surface differently depending on context.
+\textbf{Roundtrip Reconstruction Evaluation.} To validate the reconstruction property of the decoder, we evaluate word-level roundtrip accuracy on 66,547 words from the Cosmos corpus\footnote{\url{https://huggingface.co/datasets/ytu-ce-cosmos/Cosmos-Turkish-Corpus-v1.0}}. Given an input word $w$, we compute $\hat{w} = \text{decode}(\text{encode}(w))$ and measure exact-match accuracy. The decoder achieves \textbf{99.48\% exact-match accuracy} (66,200/66,547 words). The remaining 0.52\% failures arise from inherent ambiguity in Turkish phonology: vowel alternation patterns in complex verb forms (e.g., \textit{tetkiki} $\to$ \textit{tetkiği}) where multiple surface realizations are linguistically valid for the same morpheme sequence. This is not a limitation of the tokenizer but rather reflects the intrinsic many-to-one mapping in Turkish morphophonology, where the same abstract morpheme can surface differently depending on context. As an additional (more permissive) diagnostic, a single encode/decode pass over a long concatenated text yields 99.84\% word-alignment accuracy; we report exact-match per word as the primary reconstruction metric.
 
 Crucially, this near-lossless reconstruction property enables TurkishTokenizer to be used across all transformer architectures: \textbf{encoder-only models} (e.g., BERT-style embeddings), \textbf{encoder-decoder models} (e.g., translation, summarization), and \textbf{decoder-only models} (e.g., GPT-style generation). For encoder-only tasks, exact reconstruction is not required since the model operates on embeddings rather than regenerating text. For generative tasks, the 99.48\% accuracy ensures that the vast majority of outputs are orthographically correct, with the rare exceptions being phonologically valid Turkish variants.
 
-\textbf{Tokenization Efficiency.} We benchmark tokenization speed and token density on 1,000 Turkish text samples from our corpus. Table~\ref{tab:tokenization_efficiency} compares TurkishTokenizer against three Turkish-trained baseline tokenizers under matched vocabulary size (32,768).
+\textbf{Tokenization Efficiency.} We benchmark tokenization speed and token density on the same text samples. Table~\ref{tab:tokenization_efficiency} compares TurkishTokenizer against three Turkish-trained baseline tokenizers under matched vocabulary size (32,768).
 
 \begin{table}[H]
 \centering
-\caption{Tokenization efficiency comparison (1,000 texts, 653K words).}
+\caption{Tokenization efficiency comparison.}
 \label{tab:tokenization_efficiency}
 \begin{tabular}{lrrrr}
 \toprule
@@ -167,4 +160,3 @@ Cosmos & 1,620 & 1,186,834 & 1.82 & 0.223 \\
 While \texttt{TurkishTokenizer} exhibits a higher token density than BPE-based baselines-generating approximately $1.5\times$ more tokens per word—this reflects a deliberate trade-off between \textbf{sequence compression} and \textbf{morphological transparency}. Standard baselines like \textit{Cosmos} and \textit{Mursit} optimize for the shortest possible sequence length; however, this often results in sub-word units that fragment linguistic boundaries, thereby obscuring the semantic roots and functional suffixes inherent to an agglutinative language like Turkish.
 
 By enforcing segmentation at precise morpheme boundaries (e.g., \textit{kitaplarımızdan} $\rightarrow$ \texttt{kitap + lar + ımız + dan}), our approach provides the model with discrete, linguistically consistent units. Although this increases the total sequence length, the computational overhead is justified by substantial gains in downstream accuracy.
-

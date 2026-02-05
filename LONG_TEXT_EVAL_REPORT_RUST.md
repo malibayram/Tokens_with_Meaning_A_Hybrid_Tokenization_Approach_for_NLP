@@ -1,13 +1,17 @@
-# Long Text Word-Based Evaluation (RUST)
+# Roundtrip Reconstruction Evaluation (RUST)
 
 **Dataset:** alibayram/cosmos-corpus-00-5 (First 100 non-empty rows)
 **Total Characters:** 547765
 **Total Tokens:** 189983
+**Total Words:** 66547
 
 ## Results
-- **Word Accuracy:** 99.84%
-- **Correct Words:** 66442
-- **Total Words:** 66547
+- **Word-level exact-match accuracy (decode(encode(w))):** **99.48%** (66,200 / 66,547 words)
+- **Full-text word-alignment accuracy (encode/decode the concatenated text once):** 99.84% (66,442 / 66,547 words)
+
+Notes:
+- The paper reports the **word-level exact-match** metric (per-word roundtrip).
+- The full-text alignment metric is included as an additional diagnostic; it can be higher because it measures word sequence alignment after a single full-text encode/decode pass rather than strict per-word exact reconstruction.
 
 ## Mismatches (Sample)
 - **replace**: `['tetkiki']` -> `['tetkiği']`
