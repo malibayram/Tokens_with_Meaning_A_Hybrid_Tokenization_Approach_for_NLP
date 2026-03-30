@@ -215,17 +215,17 @@ def main() -> None:
         plot_split_bar(
             per_split["test"]["results"],
             "STS benchmark performance (test split)",
-            Path("figures/sts_benchmark_chart_test.png"),
+            Path("paper/figures/sts_benchmark_chart_test.png"),
         )
-        print("✓ Wrote figures/sts_benchmark_chart_test.png")
+        print("✓ Wrote paper/figures/sts_benchmark_chart_test.png")
 
     if "train" in per_split:
         plot_split_bar(
             per_split["train"]["results"],
             "STS benchmark performance (train split)",
-            Path("figures/sts_benchmark_chart_train.png"),
+            Path("paper/figures/sts_benchmark_chart_train.png"),
         )
-        print("✓ Wrote figures/sts_benchmark_chart_train.png")
+        print("✓ Wrote paper/figures/sts_benchmark_chart_train.png")
 
     # Quick CI printouts for paper text convenience.
     if "test" in per_split:

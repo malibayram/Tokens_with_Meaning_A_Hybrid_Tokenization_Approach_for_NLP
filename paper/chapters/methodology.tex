@@ -130,9 +130,9 @@ The \texttt{ApplyPhonology} function implements five Turkish morphophonological 
 \begin{enumerate}
     \item \textbf{Vowel harmony (front/back):} Suffix vowels match the frontness of the last vowel (e.g., \textit{-ler} after \textit{ev} but \textit{-lar} after \textit{çocuk}; front vowels: e,i,ö,ü; back vowels: a,ı,o,u)
     \item \textbf{Consonant assimilation:} Initial $d \to t$ after voiceless consonants (e.g., \textit{-da} $\to$ \textit{-ta} after \textit{kitap}; voiceless: f,s,t,k,ç,ş,h,p)
-    \item \textbf{Lenition:} Final $p \to b$, $k \to ğ$, $t \to d$, $ç \to c$ before vowel-initial suffixes (e.g., \textit{kitap} $\to$ \textit{kitab-ı})
-    \item \textbf{Vowel narrowing:} Stem-final $e \to i$, $a \to ı$ before progressive \textit{-yor} (e.g., \textit{de-} $\to$ \textit{di-yor}, \textit{başla-} $\to$ \textit{başlı-yor})
-    \item \textbf{Buffer consonant insertion:} $y$/$n$/$s$ inserted between vowels (e.g., \textit{okuma} + ACC $\to$ \textit{okuma-y-ı})
+    \item \textbf{Lenition:} Final consonants \textit{p}, \textit{k}, \textit{t}, and \textit{ç} can surface as \textit{b}, \textit{ğ}, \textit{d}, and \textit{c}, respectively, before vowel-initial suffixes (e.g., \textit{kitap} $\to$ \textit{kitab-ı})
+    \item \textbf{Vowel narrowing:} Stem-final \textit{e} can surface as \textit{i}, and \textit{a} as \textit{ı}, before progressive \textit{-yor} (e.g., \textit{de-} $\to$ \textit{di-yor}, \textit{başla-} $\to$ \textit{başlı-yor})
+    \item \textbf{Buffer consonant insertion:} Buffer consonants \textit{y}, \textit{n}, or \textit{s} may be inserted between vowels (e.g., \textit{okuma} + ACC $\to$ \textit{okuma-y-ı})
 \end{enumerate}
 
 \textbf{Roundtrip Reconstruction Evaluation.} To validate the reconstruction property of the decoder, we evaluate word-level roundtrip accuracy on 66,547 words from the Cosmos corpus\footnote{\url{https://huggingface.co/datasets/ytu-ce-cosmos/Cosmos-Turkish-Corpus-v1.0}}. Given an input word $w$, we compute $\hat{w} = \text{decode}(\text{encode}(w))$ and measure exact-match accuracy. The decoder achieves \textbf{99.48\% exact-match accuracy} (66,200/66,547 words). The remaining 0.52\% failures arise from inherent ambiguity in Turkish phonology: vowel alternation patterns in complex verb forms (e.g., \textit{tetkiki} $\to$ \textit{tetkiği}) where multiple surface realizations are linguistically valid for the same morpheme sequence. This is not a limitation of the tokenizer but rather reflects the intrinsic many-to-one mapping in Turkish morphophonology, where the same abstract morpheme can surface differently depending on context. As an additional (more permissive) diagnostic, a single encode/decode pass over a long concatenated text yields 99.84\% word-alignment accuracy; we report exact-match per word as the primary reconstruction metric.
@@ -152,11 +152,11 @@ Crucially, this near-lossless reconstruction property enables TurkishTokenizer t
 TurkishTokenizer & 1,935 & 1,899,670 & \textbf{2.91} & 0.356 \\
 Tabi & 1,544 & 1,298,725 & 1.99 & 0.244 \\
 Mursit & 1,655 & 1,187,418 & 1.82 & 0.223 \\
-Cosmos & 1,620 & 1,186,834 & 1.82 & 0.223 \\
+CosmosGPT2 & 1,620 & 1,186,834 & 1.82 & 0.223 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-While \texttt{TurkishTokenizer} exhibits a higher token density than BPE-based baselines-generating approximately $1.5\times$ more tokens per word—this reflects a deliberate trade-off between \textbf{sequence compression} and \textbf{morphological transparency}. Standard baselines like \textit{Cosmos} and \textit{Mursit} optimize for the shortest possible sequence length; however, this often results in sub-word units that fragment linguistic boundaries, thereby obscuring the semantic roots and functional suffixes inherent to an agglutinative language like Turkish.
+While \texttt{TurkishTokenizer} exhibits a higher token density than BPE-based baselines-generating approximately $1.5\times$ more tokens per word—this reflects a deliberate trade-off between \textbf{sequence compression} and \textbf{morphological transparency}. Standard baselines like \textit{CosmosGPT2} and \textit{Mursit} optimize for the shortest possible sequence length; however, this often results in sub-word units that fragment linguistic boundaries, thereby obscuring the semantic roots and functional suffixes inherent to an agglutinative language like Turkish.
 
 By enforcing segmentation at precise morpheme boundaries (e.g., \textit{kitaplarımızdan} $\rightarrow$ \texttt{kitap + lar + ımız + dan}), our approach provides the model with discrete, linguistically consistent units. Although this increases the total sequence length, the computational overhead is justified by substantial gains in downstream accuracy.

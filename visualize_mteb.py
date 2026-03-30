@@ -215,7 +215,8 @@ def main() -> None:
     ax.set_title("Overall MTEB Performance", fontweight="bold", pad=12)
     ax.set_xlim(0, max(45, float(np.nanmax(sorted_scores)) + 6))
 
-    out_overall = os.path.join("figures", "mteb_comparison.jpg")
+    os.makedirs(os.path.join("paper", "figures"), exist_ok=True)
+    out_overall = os.path.join("paper", "figures", "mteb_comparison.jpg")
     fig1.tight_layout()
     fig1.savefig(out_overall, facecolor="white")
     plt.close(fig1)
@@ -248,7 +249,7 @@ def main() -> None:
     ax2.set_ylim(0, 75)
     ax2.axhline(y=50, color="gray", linestyle="--", alpha=0.3, linewidth=1)
 
-    out_cat = os.path.join("figures", "mteb_comparison_by_category.jpg")
+    out_cat = os.path.join("paper", "figures", "mteb_comparison_by_category.jpg")
     fig2.tight_layout()
     fig2.savefig(out_cat, facecolor="white")
     plt.close(fig2)

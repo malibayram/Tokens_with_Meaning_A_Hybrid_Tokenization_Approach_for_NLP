@@ -19,12 +19,11 @@ Beyond runtime at inference, a practical ``adaptation cost'' matters for rapidly
 
 \textbf{Error modes and linguistic edge cases.}
 
-Despite improved alignment on many constructions, several edge cases remain important for a journal-ready characterization:
 Despite improved alignment on many constructions, several edge cases remain important for a journal-ready characterization. First, a deterministic longest-match strategy over surface strings can disagree with underlying morphological analyses in ambiguous cases (e.g., derivations where multiple segmentations are plausible). Second, Turkish includes morphophonological behaviors not fully captured by lightweight decoder rules, such as additional consonant alternations, gemination patterns, and harmony exceptions. Third, treating some lexicalized compounds as atomic entries may improve interpretability for common units but can blur morpheme-level preservation; a systematic ablation is a natural next step. Finally, while the \texttt{<uppercase>} marker preserves case without duplicating vocabulary, sequences of all-caps letters and mixed-case identifiers (e.g., acronyms, code) remain imperfectly represented without richer casing rules.
 
-\textbf{Interpretation of MTEB-TR results.}
+\textbf{Interpretation of TR-MTEB results.}
 
-On the broader MTEB-TR suite, results are closer between tokenizers than on STS. This is expected because the benchmark spans heterogeneous task types (retrieval, classification, clustering, STS), and performance depends on factors beyond tokenization (training recipe, data distribution, and model architecture). Two takeaways are robust in our runs:
+On the broader TR-MTEB suite, results are closer between tokenizers than on STS. This is expected because the benchmark spans heterogeneous task types (retrieval, classification, clustering, STS), and performance depends on factors beyond tokenization (training recipe, data distribution, and model architecture). Two takeaways are robust in our runs:
 (i) TurkishTokenizer does not degrade performance across the suite and remains competitive, and
 (ii) TurkishTokenizer yields the clearest improvements on semantic similarity, consistent with the hypothesis that morpheme-level clarity supports stable sentence representations.
 

@@ -60,6 +60,7 @@ def load_data():
 
 
 def plot_metric(df, metric, filename):
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     plt.figure(figsize=(14, 7))
 
     # Create line plot
@@ -94,10 +95,10 @@ def main():
     print(f"Loaded {len(df)} data points.")
 
     print("Generating Pearson chart...")
-    plot_metric(df, "Pearson", "version_history_pearson.png")
+    plot_metric(df, "Pearson", os.path.join("paper", "figures", "version_history_pearson.png"))
 
     print("Generating Spearman chart...")
-    plot_metric(df, "Spearman", "version_history_spearman.png")
+    plot_metric(df, "Spearman", os.path.join("paper", "figures", "version_history_spearman.png"))
 
     print("Done.")
 

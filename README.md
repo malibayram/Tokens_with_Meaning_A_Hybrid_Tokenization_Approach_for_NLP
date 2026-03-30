@@ -4,14 +4,15 @@ This repository contains the LaTeX sources for the paper and the scripts/artifac
 
 ## Paper
 
-- Main TeX: `main.tex` (includes sections from `chapters/`)
-- Style: `neurips_2024.sty`
-- References: `tokenizer.bib`
-- Prebuilt PDFs (if present in the repo): `main.pdf`, `2025.emnlp-main.834.pdf`
+- Main TeX: `paper/main.tex` (includes sections from `paper/chapters/`)
+- Style: `paper/neurips_2024.sty`
+- References: `paper/tokenizer.bib`
+- Prebuilt PDFs (if present in the repo): `paper/main.pdf`, `paper/2025.emnlp-main.834.pdf`
 
 ### Build the PDF locally
 
 ```bash
+cd paper
 latexmk -pdf -interaction=nonstopmode main.tex
 ```
 
@@ -84,15 +85,13 @@ The TurBLiMP scripts expect a local TurBLiMP/data folder:
 
 ## Repository layout
 
-- `chapters/`: paper sections (`abstract.tex`, `methodology.tex`, `results_and_analysis.tex`, etc.)
-- `figures/`: generated figures used in the paper (e.g., MTEB charts)
+- `paper/`: LaTeX paper sources and paper-local assets (`main.tex`, `chapters/`, `figures/`, `turblimp_results_tables/`, `tokenizer.bib`, `neurips_2024.sty`, `main.pdf`)
 - `results/`: stored evaluation outputs (MTEB JSONs by model/revision)
-- `turblimp_results_tables/`: generated TurBLiMP summary tables
 - `*.py`: training/evaluation and report-generation scripts
 
 ## Authors / Contact
 
-Authors (as listed in `main.tex`): M. Ali Bayram, Ali Arda Fincan, Ahmet Semih Gümüş, Sercan Karakaş, Banu Diri, Savaş Yıldırım, Demircan Çelik.
+Authors (as listed in `paper/main.tex`): M. Ali Bayram, Ali Arda Fincan, Ahmet Semih Gümüş, Sercan Karakaş, Banu Diri, Savaş Yıldırım, Demircan Çelik.
 
 Contact: `malibayram20@gmail.com`
 

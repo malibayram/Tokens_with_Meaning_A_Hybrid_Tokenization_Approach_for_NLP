@@ -55,6 +55,6 @@
 | tabi-random            | 34.92%        | 26              |
 
 
-![Overall MTEB Comparison](figures/mteb_comparison.jpg)
+![Overall MTEB Comparison](paper/figures/mteb_comparison.jpg)
 
-![Average MTEB Scores](figures/mteb_average_scores.png)
+![Average MTEB Scores](paper/figures/mteb_average_scores.png)

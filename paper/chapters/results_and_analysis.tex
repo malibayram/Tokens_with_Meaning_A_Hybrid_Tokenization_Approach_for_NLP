@@ -40,50 +40,50 @@ This sentence contains a wide range of morphological features, including compoun
 \vspace{1em}
 
 \textbf{Proposed TurkishTokenizer:} \\
-The hybrid morphological tokenizer segments the sentence into linguistically meaningful units with high fidelity. It produces: \\
-\texttt{["<uppercase>", " atasöz", "leri", " geçmiş", "ten", " gün", "üm", "üz", "e", " kadar", " ulaş", "an", " anlam", "ı", " bakım", "ın", "dan", " mecaz", "lı", " bir", " mana", " kazan", "an", " kalıp", "laş", "mış", " söz", "ler", "dir", "."]} \\
+The proposed tokenizer segments the sentence into linguistically meaningful units with high fidelity. It produces:
+\tokseq{["<uppercase>", " atasöz", "leri", " geçmiş", "ten", " gün", "üm", "üz", "e", " kadar", " ulaş", "an", " anlam", "ı", " bakım", "ın", "dan", " mecaz", "lı", " bir", " mana", " kazan", "an", " kalıp", "laş", "mış", " söz", "ler", "dir", "."]}
 It correctly separates suffixes such as (\texttt{"ın", "dan", "lı", "an", "mış", "dir"}), extracts root forms such as \texttt{"atasöz", "gün", "mana"} with leading spaces to mark word boundaries, and employs the \texttt{"<uppercase>"} token to preserve orthographic case.
 
 \vspace{1em}
 
-\textbf{Tested newmindaiMursit Tokenizer:} \\
-The hybrid morphological tokenizer segments the sentence into linguistically meaningful units with high fidelity. It produces: \\
-\texttt{["At", "asöz", "leri", " geçmişten", " günümüze", " kadar", " ulaşan", " anlamı", " bakımından", " mec", "azlı", " bir", " man", "a", " kazanan", " kalıp", "laşmış", " söz", "lerdir", "."]} \\
-Although it trained with Turkish text still does not capture most of suffixes, it fragments common roots (\texttt{"At", "asöz"} instead of \texttt{"atasöz"}) and fails to isolate inner morphemes in forms such as \texttt{"lerdir"} and \texttt{"kazanan"}, limiting morphological interpretability.
+\textbf{Mursit tokenizer:} \\
+The Mursit tokenizer~\cite{mecellem2026} tends to preserve frequent surface forms as whole tokens rather than isolating productive suffix boundaries. It produces:
+\tokseq{["At", "asöz", "leri", " geçmişten", " günümüze", " kadar", " ulaşan", " anlamı", " bakımından", " mec", "azlı", " bir", " man", "a", " kazanan", " kalıp", "laşmış", " söz", "lerdir", "."]}
+Compared with TurkishTokenizer, it splits the compound root \texttt{"atasöz"} into \texttt{"At", "asöz"} and keeps long inflected spans such as \texttt{"geçmişten"}, \texttt{"günümüze"}, \texttt{"ulaşan"}, and \texttt{"lerdir"} intact, which reduces morpheme-level interpretability.
 
 \vspace{1em}
 
-\textbf{Tested cosmosGPT2 Tokenizer:} \\
-The hybrid morphological tokenizer segments the sentence into linguistically meaningful units with high fidelity. It produces: \\
-\texttt{["At", "as", "öz", "leri", " geçmişten", " günümüze", " kadar", " ulaşan", " anlamı", " bakımından", " mec", "az", "lı", " bir", " man", "a", " kazanan", " kalıp", "laşmış", " söz", "lerdir", "."]} \\
-Although it trained with Turkish text still does not capture most of suffixes, it fragments common roots (\texttt{"At", "as", "öz"} instead of \texttt{"atasöz"}) and fails to isolate inner morphemes in forms such as \texttt{"lerdir"} and \texttt{"kazanan"}, limiting morphological interpretability.
+\textbf{CosmosGPT2 tokenizer:} \\
+The CosmosGPT2 tokenizer~\cite{kesgin2024introducing} behaves similarly, but fragments some roots even more aggressively into smaller BPE pieces. It produces:
+\tokseq{["At", "as", "öz", "leri", " geçmişten", " günümüze", " kadar", " ulaşan", " anlamı", " bakımından", " mec", "az", "lı", " bir", " man", "a", " kazanan", " kalıp", "laşmış", " söz", "lerdir", "."]}
+It breaks \texttt{"atasözleri"} into three root fragments (\texttt{"At", "as", "öz"}) and still keeps many inflected spans unanalyzed, so both lexical integrity and suffix transparency are weaker than in TurkishTokenizer.
 
 \vspace{1em}
 
-\textbf{Tested tabi Tokenizer:} \\
-The hybrid morphological tokenizer segments the sentence into linguistically meaningful units with high fidelity. It produces: \\
-\texttt{["A", "tasöz", "leri ", "geçmişten ", "günümüze kadar ", "ulaşan ", "anlamı ", "bakımından ", "mec", "az", "lı bir ", "mana ", "kazanan ", "kalıp", "laşmış", " söz", "lerdir", "."]} \\
-Although it trained with Turkish text still does not capture most of suffixes, it fragments common roots (\texttt{"A", "tasöz"} instead of \texttt{"atasöz"}) and fails to isolate inner morphemes in forms such as \texttt{"lerdir"} and \texttt{"kazanan"}, limiting morphological interpretability.
+\textbf{Tabi tokenizer:} \\
+The Tabi tokenizer, used here as the tokenizer component of TabiBERT~\cite{turker_tabibert_2026}, applies coarse merges that often retain whitespace-attached spans as single units. It produces:
+\tokseq{["A", "tasöz", "leri ", "geçmişten ", "günümüze kadar ", "ulaşan ", "anlamı ", "bakımından ", "mec", "az", "lı bir ", "mana ", "kazanan ", "kalıp", "laşmış", " söz", "lerdir", "."]}
+This behavior obscures internal morphology even more strongly: the root \texttt{"atasöz"} is split into \texttt{"A", "tasöz"}, several tokens absorb following spaces, and multiword or inflected spans such as \texttt{"günümüze kadar "} are preserved as opaque units.
 
 \vspace{1em}
 
 \textbf{Gemma-3:} \\
 The tokenizer \texttt{google/gemma-3} segments the sentence as: \\
-\texttt{["<bos>", "At", "as", "öz", "leri", " geçmiş", "ten", " gün", "ümü", "ze", " kadar", " ulaş", "an", " anlam", "ı", " bakım", "ından", " mec", "az", "lı", " bir", " mana", " kaz", "anan", " kal", "ı", "pla", "ş", "mış", " söz", "lerdir", "."]} \\
+\tokseq{["<bos>", "At", "as", "öz", "leri", " geçmiş", "ten", " gün", "ümü", "ze", " kadar", " ulaş", "an", " anlam", "ı", " bakım", "ından", " mec", "az", "lı", " bir", " mana", " kaz", "anan", " kal", "ı", "pla", "ş", "mış", " söz", "lerdir", "."]}
 Although it captures some suffixes like \texttt{"ten"} and \texttt{"ından"}, it fragments common roots (\texttt{"At", "as", "öz"} instead of \texttt{"atasöz"}) and fails to isolate inner morphemes in forms such as \texttt{"lerdir"} and \texttt{"kazanan"}, limiting morphological interpretability.
 
 \vspace{1em}
 
 \textbf{YTU (Yıldız Technical University) Turkish GPT-2 (without pruned vocab to 32k):} \\
 The tokenizer \texttt{ytu-ce-cosmos/turkish-gpt2-large-750m-instruct-v0.1}, trained on Turkish corpora, yields: \\
-\texttt{["At", "as", "öz", "leri", " geçmişten", " günümüze", " kadar", " ulaşan", " anlamı", " bakımından", " mec", "az", "lı", " bir", " mana", " kazanan", " kalıp", "laşmış", " söz", "lerdir", "."]} \\
+\tokseq{["At", "as", "öz", "leri", " geçmişten", " günümüze", " kadar", " ulaşan", " anlamı", " bakımından", " mec", "az", "lı", " bir", " mana", " kazanan", " kalıp", "laşmış", " söz", "lerdir", "."]}
 Although it still segments \texttt{"atasözleri"} incorrectly, it performs well with forms like \texttt{"geçmişten"}, \texttt{"günümüze"}, and \texttt{"bakımından"}, showing the advantage of Turkish-specific pretraining.
 
 \vspace{1em}
 
 \textbf{GPT-4o:} \\
 The tokenizer \texttt{gpt-4o-o200k\_base} generates: \\
-\texttt{["At", "as", "öz", "leri", " geçmiş", "ten", " gün", "ümü", "ze", " kadar", " ulaş", "an", " anlam", "ı", " bakım", "ından", " mec", "az", "lı", " bir", " mana", " kaz", "anan", " kal", "ı", "pla", "ş", "mış", " söz", "ler", "dir", "."]} \\
+\tokseq{["At", "as", "öz", "leri", " geçmiş", "ten", " gün", "ümü", "ze", " kadar", " ulaş", "an", " anlam", "ı", " bakım", "ından", " mec", "az", "lı", " bir", " mana", " kaz", "anan", " kal", "ı", "pla", "ş", "mış", " söz", "ler", "dir", "."]}
 Its segmentation strategy is aware of Turkish morphemes but limited by frequent over-segmentation of compound and derived forms.
 
 \vspace{1em}
@@ -92,9 +92,9 @@ The results presented in this section provide strong empirical support for the h
 
 \textbf{Downstream Task Evaluation.}
 
-To assess the impact of morphologically informed tokenization on downstream model performance, we evaluated the embeddings produced by models initialized with different tokenizers using three benchmarks: STSb-TR, MTEB-TR, and TurBLiMP. All models were initialized randomly to isolate the effect of tokenization structure from pre-training data.
+To assess the impact of morphologically informed tokenization on downstream model performance, we evaluated the embeddings produced by models initialized with different tokenizers using three benchmarks: STSb-TR, TR-MTEB~\cite{baysan-gungor-2025-tr}, and TurBLiMP. All models were initialized randomly to isolate the effect of tokenization structure from pre-training data.
 
-Concretely, we construct four sentence embedding models that share the same encoder architecture (\texttt{google/embeddinggemma-300m}) and vocabulary size (32,768). Each model is randomly initialized with a fixed seed (42) and trained under an identical embedding-distillation objective against a teacher embedding model based on the same architecture.\footnote{\url{https://huggingface.co/google/embeddinggemma-300m}} The only difference between models is the tokenizer used to produce the token ID sequences. We refer to these models as \texttt{*-random} to emphasize that they start from random weights rather than a pretrained checkpoint, so downstream differences primarily reflect inductive bias introduced by tokenization and decoding choices under a controlled training budget.
+Concretely, we construct four sentence embedding models that share the same encoder architecture (\texttt{google/embeddinggemma-300m}; EmbeddingGemma~\cite{vera_embeddinggemma_2025}) and vocabulary size (32,768). Each model is randomly initialized with a fixed seed (42) and trained under an identical embedding-distillation objective against a teacher embedding model based on the same architecture.\footnote{\url{https://huggingface.co/google/embeddinggemma-300m}} The only difference between models is the tokenizer used to produce the token ID sequences. We refer to these models as \texttt{*-random} to emphasize that they start from random weights rather than a pretrained checkpoint, so downstream differences primarily reflect inductive bias introduced by tokenization and decoding choices under a controlled training budget.
 
 Training data comes from a Turkish text corpus with pre-computed teacher embeddings.\footnote{\url{https://huggingface.co/datasets/alibayram/cosmos-corpus-0-05-with-embeddings}} We additionally prepare a unified encoded dataset that stores token ID sequences for all compared tokenizers.\footnote{\url{https://huggingface.co/datasets/alibayram/cosmos-corpus-encoded}} To ensure an apples-to-apples comparison under a fixed context window, we discard any sample for which \emph{any} tokenizer produces a sequence longer than 2048 tokens, so that no model benefits from truncation artifacts or sees different content due to length differences.
 
@@ -159,22 +159,22 @@ To better understand the learning dynamics, we analyzed the performance evolutio
 
 Pearson correlation captures linear agreement with human similarity judgments, while Spearman correlation captures rank-order agreement. Reporting both is important in STS, since models may preserve relative similarity ordering even when the mapping is not perfectly linear, and conversely small linear gains may not reflect better ranking behavior.
 
-In our version tracking, both correlations show the same qualitative trend: TurkishTokenizer remains ahead of the strongest baselines across revisions, indicating that the downstream improvement is stable rather than a single-run artifact. Importantly, all three baseline tokenizers (Mursit, CosmosGPT2, Tabi)-which are independently trained BPE tokenizers from different research groups-show consistent relative ordering across all benchmarks (STS, MTEB-TR, TurBLiMP). This cross-tokenizer consistency provides strong evidence that the observed performance differences reflect genuine tokenizer-induced inductive bias rather than random initialization variance: it is statistically implausible for TurkishTokenizer to outperform three independent baselines by chance across multiple evaluation dimensions. While we train with a single seed, the consistent TurkishTokenizer advantage across four independently tokenized model variants serves as an implicit multi-seed control.
+In our version tracking, both correlations show the same qualitative trend: TurkishTokenizer remains ahead of the strongest baselines across revisions, indicating that the downstream improvement is stable rather than a single-run artifact. Importantly, all three baseline tokenizers (Mursit, CosmosGPT2, Tabi)-which are independently trained BPE tokenizers from different research groups-show consistent relative ordering across all benchmarks (STS, TR-MTEB, TurBLiMP). This cross-tokenizer consistency provides strong evidence that the observed performance differences reflect genuine tokenizer-induced inductive bias rather than random initialization variance: it is statistically implausible for TurkishTokenizer to outperform three independent baselines by chance across multiple evaluation dimensions. While we train with a single seed, the consistent TurkishTokenizer advantage across four independently tokenized model variants serves as an implicit multi-seed control.
 
-On the comprehensive MTEB suite, which covers retrieval, classification, clustering, and pair classification tasks, the TurkishTokenizer-based model achieves the strongest overall average among the compared random-initialized baselines.
+On the comprehensive TR-MTEB suite~\cite{baysan-gungor-2025-tr}, which covers retrieval, classification, clustering, and pair classification tasks, the TurkishTokenizer-based model achieves the strongest overall average among the compared random-initialized baselines.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.92\linewidth]{figures/mteb_comparison.jpg}
-    \caption{MTEB-TR overall comparison.}
+    \caption{TR-MTEB overall comparison.}
     \label{fig:mteb_average}
 \end{figure}
 
-Figure~\ref{fig:mteb_average} aggregates performance across all evaluated MTEB-TR tasks into a single overall score per model. To make this comparison more interpretable, we next break results down by category (Table~\ref{tab:mteb_category_averages}) and by individual task (Table~\ref{tab:mteb_detailed}), which helps identify where morphology-aware tokenization provides the largest gains and where differences are smaller.
+Figure~\ref{fig:mteb_average} aggregates performance across all evaluated TR-MTEB tasks into a single overall score per model. To make this comparison more interpretable, we next break results down by category (Table~\ref{tab:mteb_category_averages}) and by individual task (Table~\ref{tab:mteb_detailed}), which helps identify where morphology-aware tokenization provides the largest gains and where differences are smaller.
 
 \begin{table}[H]
 \centering
-\caption{MTEB-TR category averages.}
+\caption{TR-MTEB category averages.}
 \label{tab:mteb_category_averages}
 \begin{tabular}{lrrrr}
 \toprule
@@ -195,7 +195,7 @@ Category-level means summarize broad regimes (retrieval vs.\ classification vs.\
 
 \begin{table}[H]
 \centering
-\caption{Detailed MTEB-TR task-level performance.}
+\caption{Detailed TR-MTEB task-level performance.}
 \label{tab:mteb_detailed}
 \resizebox{\linewidth}{!}{
 \begin{tabular}{lrrrr}
@@ -240,9 +240,9 @@ STSbTR & \textbf{50.04} & 45.73 & 42.14 & 42.54 \\
 }
 \end{table}
 
-As shown in Table \ref{tab:mteb_detailed}, the TurkishTokenizer-based model achieved an average score of \textbf{39.57\%} across 26 tasks, surpassing Mursit (35.92\%), CosmosGPT2 (35.65\%), and Tabi (34.92\%). Analyzing performance by category reveals distinct trade-offs. TurkishTokenizer demonstrates substantial advantages in \textit{STS} and \textit{Retrieval} tasks (e.g., TQuadRetrieval: 46.92\% vs 34.96\% for Tabi), which aligns with our hypothesis that morphology-aware segmentation improves the semantic quality of embeddings for similarity and search. At the same time, the Tabi baseline remains competitive or superior in specific \textit{Classification} tasks (e.g., Turkish75NewsClassification: 80.00\% vs 78.00\% for TurkishTokenizer), suggesting that different tokenization priors can favor different downstream regimes even under matched architecture and training protocol.
+As shown in Table \ref{tab:mteb_detailed}, the TurkishTokenizer-based model achieved an average score of \textbf{39.57\%} across 26 TR-MTEB tasks, surpassing Mursit (35.92\%), CosmosGPT2 (35.65\%), and Tabi (34.92\%). Analyzing performance by category reveals distinct trade-offs. TurkishTokenizer demonstrates substantial advantages in \textit{STS} and \textit{Retrieval} tasks (e.g., TQuadRetrieval: 46.92\% vs 34.96\% for Tabi), which aligns with our hypothesis that morphology-aware segmentation improves the semantic quality of embeddings for similarity and search. At the same time, the Tabi baseline remains competitive or superior in specific \textit{Classification} tasks (e.g., Turkish75NewsClassification: 80.00\% vs 78.00\% for TurkishTokenizer), suggesting that different tokenization priors can favor different downstream regimes even under matched architecture and training protocol.
 
-While MTEB-TR provides broad downstream coverage, it does not isolate controlled grammatical manipulations. We therefore complement it with TurBLiMP, which probes specific linguistic phenomena via minimal pairs.
+While TR-MTEB provides broad downstream coverage, it does not isolate controlled grammatical manipulations. We therefore complement it with TurBLiMP, which probes specific linguistic phenomena via minimal pairs.
 
 
 TurBLiMP provides Turkish minimal pairs designed to probe specific linguistic phenomena (e.g., agreement, scrambling, nominalization) \cite{basar_turblimp_2025}. Since our models are sentence embedding encoders (rather than generative language models), we evaluate a centroid-based acceptability proxy: for each phenomenon file, we compute the centroid of the grammatical sentence embeddings, score each sentence by cosine similarity to this centroid, and count a minimal pair as correct if the grammatical sentence receives a higher score than its ungrammatical counterpart. We report the resulting pairwise accuracy per phenomenon (in \%) in Table~\ref{tab:turblimp_detailed}. Following the visualization convention used in the TurBLiMP paper, cell background colors indicate relative performance, ranging from lower (red) to higher (green).

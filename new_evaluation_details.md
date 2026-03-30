@@ -18,8 +18,8 @@ This document explains how the evaluation artifacts in this repo are produced fr
 - Figure(s) + LaTeX table are generated from the JSON (no re-eval) via:
   - `python3 generate_sts_artifacts.py`
 - Outputs:
-  - `figures/sts_benchmark_chart_test.png`
-  - `figures/sts_benchmark_chart_train.png`
+  - `paper/figures/sts_benchmark_chart_test.png`
+  - `paper/figures/sts_benchmark_chart_train.png`
   - `tables/sts_results.tex`
 
 ---
@@ -36,8 +36,8 @@ This document explains how the evaluation artifacts in this repo are produced fr
 **Charts (JPEG)**
 - `python3 visualize_mteb.py`
 - Outputs:
-  - `figures/mteb_comparison.jpg` (overall)
-  - `figures/mteb_comparison_by_category.jpg` (by category)
+  - `paper/figures/mteb_comparison.jpg` (overall)
+  - `paper/figures/mteb_comparison_by_category.jpg` (by category)
 
 **Paper LaTeX tables**
 - `python3 generate_mteb_latex_tables.py`
@@ -76,13 +76,13 @@ python3 eval_embeddings_turblimp.py \
     alibayram/newmindaiMursit-random \
     alibayram/cosmosGPT2-random \
     alibayram/tabi-random \
-  --output_dir turblimp_results_tables
+  --output_dir paper/turblimp_results_tables
 ```
 
 Outputs:
-- `turblimp_results_tables/results_table_centroid.csv`
-- `turblimp_results_tables/results_table_centroid.html`
-- `turblimp_results_tables/results_table_centroid.tex` (plain, no cell colors)
+- `paper/turblimp_results_tables/results_table_centroid.csv`
+- `paper/turblimp_results_tables/results_table_centroid.html`
+- `paper/turblimp_results_tables/results_table_centroid.tex` (plain, no cell colors)
 
 ### 3.2 Use HTML to carry cell colors into the paper
 
@@ -94,12 +94,11 @@ python3 generate_turblimp_tables_from_html.py
 ```
 
 Outputs:
-- `turblimp_results_tables/results_table_centroid_colored.tex` (uses `\cellcolor[RGB]{...}`)
-- `turblimp_results_tables/results_table_centroid_inlined.html` (same table, inline `style=...`)
+- `paper/turblimp_results_tables/results_table_centroid_colored.tex` (uses `\cellcolor[RGB]{...}`)
+- `paper/turblimp_results_tables/results_table_centroid_inlined.html` (same table, inline `style=...`)
 
 The paper includes:
-- `turblimp_results_tables/results_table_centroid_colored.tex`
+- `paper/turblimp_results_tables/results_table_centroid_colored.tex`
 
 If you just want to view the colored table in a browser/editor, open:
-- `turblimp_results_tables/results_table_centroid_inlined.html`
-
+- `paper/turblimp_results_tables/results_table_centroid_inlined.html`

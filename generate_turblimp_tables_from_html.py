@@ -3,11 +3,11 @@
 Generate color-aware TurBLiMP LaTeX + inline-styled HTML from the Pandas Styler HTML.
 
 Input:
-  turblimp_results_tables/results_table_centroid.html
+  paper/turblimp_results_tables/results_table_centroid.html
 
 Outputs:
-  turblimp_results_tables/results_table_centroid_colored.tex
-  turblimp_results_tables/results_table_centroid_inlined.html
+  paper/turblimp_results_tables/results_table_centroid_colored.tex
+  paper/turblimp_results_tables/results_table_centroid_inlined.html
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ import re
 from pathlib import Path
 
 
-INPUT_HTML = Path("turblimp_results_tables/results_table_centroid.html")
-OUTPUT_TEX = Path("turblimp_results_tables/results_table_centroid_colored.tex")
-OUTPUT_INLINE_HTML = Path("turblimp_results_tables/results_table_centroid_inlined.html")
+INPUT_HTML = Path("paper/turblimp_results_tables/results_table_centroid.html")
+OUTPUT_TEX = Path("paper/turblimp_results_tables/results_table_centroid_colored.tex")
+OUTPUT_INLINE_HTML = Path("paper/turblimp_results_tables/results_table_centroid_inlined.html")
 
 MODEL_LABELS = {
     "mft": "TurkishTokenizer",
@@ -174,4 +174,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
